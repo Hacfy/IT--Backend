@@ -39,21 +39,21 @@ func (db *Query) InitialiseDBqueries() error {
 			user_level userLevel NOT NULL
 		)`,
 		`CREATE TABLE IF NOT EXISTS organisations (
-			org_id SERIAL PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			main_admin_id INTEGER NOT NULL,
-			org_name VARCHAR(50) NOT NULL,
-			org_email VARCHAR(50) NOT NULL,
-			org_password VARCHAR(256) NOT NULL,
+			name VARCHAR(50) NOT NULL,
+			email VARCHAR(50) NOT NULL,
+			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_organisations_main_admin_id FOREIGN KEY (main_admin_id) REFERENCES main_admin(main_admin_id) ON UPDATE CASCADE,
-			CONSTRAINT fk_organisations_email FOREIGN KEY (org_email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
+			CONSTRAINT fk_organisations_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS super_admins (
-			super_admin_id SERIAL PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			org_id INTEGER NOT NULL,
-			super_admin_email VARCHAR(50) NOT NULL,
-			super_admin_password VARCHAR(256) NOT NULL,
+			email VARCHAR(50) NOT NULL,
+			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(org_id) ON DELETE CASCADE,
-			CONSTRAINT fk_super_admin_super_admin_email FOREIGN KEY (super_admin_email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
+			CONSTRAINT fk_super_admin_super_admin_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS branches (
 			branch_id SERIAL PRIMARY KEY,
@@ -65,13 +65,13 @@ func (db *Query) InitialiseDBqueries() error {
 			CONSTRAINT fk_branch_super_admin_id FOREIGN KEY (super_admin_id) REFERENCES super_admins(super_admin_id) ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS branch_heads (
-			branch_head_id SERIAL PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			branch_id INTEGER NOT NULL,
-			branch_head_name VARCHAR(50) NOT NULL,
-			branch_head_email VARCHAR(50) NOT NULL,
-			branch_head_password VARCHAR(256) NOT NULL,
+			name VARCHAR(50) NOT NULL,
+			email VARCHAR(50) NOT NULL,
+			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_branch_heads_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON DELETE CASCADE,
-			CONSTRAINT fk_branch_heads_email FOREIGN KEY (branch_head_email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
+			CONSTRAINT fk_branch_heads_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS departments (
 			department_id SERIAL PRIMARY KEY,
@@ -80,13 +80,13 @@ func (db *Query) InitialiseDBqueries() error {
 			CONSTRAINT fk_department_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS department_heads (
-			department_head_id SERIAL PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			department_id INTEGER NOT NULL,
-			department_head_name VARCHAR(50) NOT NULL,
-			department_head_email VARCHAR(50) NOT NULL,
-			department_head_password VARCHAR(256) NOT NULL,
+			name VARCHAR(50) NOT NULL,
+			email VARCHAR(50) NOT NULL,
+			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_department_heads_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE,
-			CONSTRAINT fk_department_heads_email FOREIGN KEY (department_head_email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
+			CONSTRAINT fk_department_heads_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
 		)`,
 	}
 

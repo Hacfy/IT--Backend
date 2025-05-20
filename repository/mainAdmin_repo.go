@@ -47,8 +47,6 @@ func (ma *MainAdminRepo) CreateMainAdmin(e echo.Context) (int, error) {
 
 	companyPassword := os.Getenv("COMPANY_PASSWORD")
 
-	log.Println(companyPassword)
-
 	if create_ma.CompanyPassword != companyPassword {
 		log.Printf("wrong company_password")
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")

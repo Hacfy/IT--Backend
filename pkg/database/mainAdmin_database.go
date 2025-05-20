@@ -32,7 +32,7 @@ func (q *Query) CreateOrganisation(organisation models.OrganisationModel) (int, 
 	var orgID int
 
 	query1 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query2 := "INSERT INTO organisations(main_admin_id, org_name, org_email, org_password) VALUES($1, $2, $3, $4) RETURNING org_id"
+	query2 := "INSERT INTO organisations(main_admin_id, name, email, password) VALUES($1, $2, $3, $4) RETURNING org_id"
 
 	tx, err := q.db.Begin()
 	if err != nil {
