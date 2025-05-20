@@ -17,10 +17,12 @@ func Start(db *sql.DB, addr *string) {
 	e := InitialiseHttpRouter(db)
 
 	query := database.NewDBinstance(db)
+
 	err := query.InitialiseDBqueries()
 	if err != nil {
 		log.Fatalf("Unable to Initialize Database %v", err)
 	}
+
 	log.Printf("Starting server at %s", *addr)
 	go func() {
 		e.Start(*addr)

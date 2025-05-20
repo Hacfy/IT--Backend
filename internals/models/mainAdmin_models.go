@@ -26,6 +26,10 @@ type DeleteMainAdminModel struct {
 	CompanyPassword string `json:"company_password" validate:"required"`
 }
 
+type GetAllMainAdminModel struct {
+	CompanyPassword string `json:"company_password" validate:"required"`
+}
+
 type MainAdminInterface interface {
 	CreateMainAdmin(echo.Context) (int, error)
 	CreateOrganisation(echo.Context) (int, error)

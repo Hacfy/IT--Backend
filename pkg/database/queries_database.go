@@ -21,7 +21,7 @@ func (db *Query) InitialiseDBqueries() error {
 		`CREATE TABLE IF NOT EXISTS main_admin (
 			main_admin_id SERIAL PRIMARY KEY,
 			main_admin_email VARCHAR(50) NOT NULL,
-			main_admin_password VARCHAR(50) NOT NULL
+			main_admin_password VARCHAR(256) NOT NULL
 		)`,
 		`DO $$ 
 		BEGIN

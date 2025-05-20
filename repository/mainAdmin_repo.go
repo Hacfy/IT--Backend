@@ -47,7 +47,9 @@ func (ma *MainAdminRepo) CreateMainAdmin(e echo.Context) (int, error) {
 
 	companyPassword := os.Getenv("COMPANY_PASSWORD")
 
-	if create_ma.CompanyPassword == companyPassword {
+	log.Println(companyPassword)
+
+	if create_ma.CompanyPassword != companyPassword {
 		log.Printf("wrong company_password")
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
@@ -84,7 +86,9 @@ func (ma *MainAdminRepo) CreateMainAdmin(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", main_admin.MainAdminEmail)
-		utils.SendLoginCredentials(main_admin.MainAdminEmail, password)
+		if err := utils.SendLoginCredentials(main_admin.MainAdminEmail, password); err != nil {
+			log.Fatal("error while sending credentials to %v: %v", main_admin.MainAdminEmail, err)
+		}
 		log.Printf("credentials sent to %v", main_admin.MainAdminEmail)
 	}()
 

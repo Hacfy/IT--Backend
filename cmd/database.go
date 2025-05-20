@@ -2,8 +2,10 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"
 	"log"
+	"os"
+
+	_ "github.com/lib/pq"
 )
 
 type Connection struct {
@@ -11,7 +13,11 @@ type Connection struct {
 }
 
 func NewDatabase() *Connection {
-	DB, err := sql.Open("postgres", "postgresql://it_inventory_mic8_user:DkyTzw7x3PtUTzdDFuNLoSqEBXRQgJG5@dpg-d0kscfruibrs739q4pl0-a.singapore-postgres.render.com/it_inventory_mic8")
+	Postgres_uri := os.Getenv("POSTGRES_URI")
+	if Postgres_uri == "" {
+		log.Fatal("POSTGRES_URI not found")
+	}
+	DB, err := sql.Open("postgres", Postgres_uri)
 	if err != nil {
 		log.Fatal(err)
 	}
