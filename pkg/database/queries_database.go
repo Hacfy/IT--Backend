@@ -53,7 +53,7 @@ func (db *Query) InitialiseDBqueries() error {
 			name VARCHAR(50) NOT NULL,
 			email VARCHAR(50) NOT NULL,
 			password VARCHAR(256) NOT NULL,
-			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(org_id) ON DELETE CASCADE,
+			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON DELETE CASCADE,
 			CONSTRAINT fk_super_admin_super_admin_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS branches (
@@ -62,8 +62,8 @@ func (db *Query) InitialiseDBqueries() error {
 			super_admin_id INTEGER NOT NULL,
 			branch_name VARCHAR(50) NOT NULL,
 			branch_location VARCHAR(50) NOT NULL,
-			CONSTRAINT fk_branch_org_id FOREIGN KEY (org_id) REFERENCES organisations(org_id) ON DELETE CASCADE,
-			CONSTRAINT fk_branch_super_admin_id FOREIGN KEY (super_admin_id) REFERENCES super_admins(super_admin_id) ON DELETE CASCADE
+			CONSTRAINT fk_branch_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON DELETE CASCADE,
+			CONSTRAINT fk_branch_super_admin_id FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS branch_heads (
 			id SERIAL PRIMARY KEY,
