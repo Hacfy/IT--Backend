@@ -14,3 +14,7 @@ type CreateSuperAdminModel struct {
 }
 
 //login in auth model
+
+type DeleteSuperAdminModel struct {
+	SuperAdminEmail string `json:"super_admin_email" validate:"required,email"`
+}

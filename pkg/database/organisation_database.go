@@ -38,3 +38,5 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 	return sa_id, nil
 
 }
+
+func (q *Query) DeleteSuperAdmin(superAdminEmail string)
