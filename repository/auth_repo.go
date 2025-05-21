@@ -23,7 +23,7 @@ func NewAuthRepo(db *sql.DB) *AuthRepo {
 	}
 }
 
-func (ar *AuthRepo) Login(e echo.Context) (int, string, string, string, error) {
+func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, error) {
 	var req_user models.LoginModel
 
 	if err := e.Bind(&req_user); err != nil {
@@ -47,7 +47,7 @@ func (ar *AuthRepo) Login(e echo.Context) (int, string, string, string, error) {
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid user credentials")
 	}
 
-	db_password, db_id, ok, err := query.GetUserPassword(req_user.Email, userType)
+	db_password, db_id, ok, err := query.GetUserPasswordID(req_user.Email, userType)
 	if err != nil {
 		log.Printf("Error checking user details:", err)
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")

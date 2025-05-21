@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
@@ -224,7 +225,7 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 
 	organisation.OrganisationEmail = new_org.OrganisationEmail
 
-	organisation.OrganisationName = new_org.OrganisationName
+	organisation.OrganisationName = strings.ToLower(new_org.OrganisationName)
 
 	organisation.OrganisationPassword = hash
 

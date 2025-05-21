@@ -54,7 +54,7 @@ func (ma *MainAdminHandler) LoginMainAdminHandler(e echo.Context) error {
 	refreshCookie.Value = refreshToken
 	refreshCookie.HttpOnly = true
 	refreshCookie.Secure = false
-	refreshCookie.Expires = time.Now().Add(5 * 24 * time.Hour)
+	refreshCookie.Expires = time.Now().Add(7 * 24 * time.Hour)
 	e.SetCookie(refreshCookie)
 
 	return e.JSON(status, echo.Map{

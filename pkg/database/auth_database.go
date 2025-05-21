@@ -1,6 +1,9 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
 func (q *Query) GetUserType(userEmail string) (string, bool, error) {
 	var userType string
@@ -15,7 +18,7 @@ func (q *Query) GetUserType(userEmail string) (string, bool, error) {
 	return userType, true, nil
 }
 
-func (q *Query) GetUserPassword(userEmail, userType string) (string, int, bool, error) {
+func (q *Query) GetUserPasswordID(userEmail, userType string) (string, int, bool, error) {
 	var db_password string
 	var db_id int
 
@@ -27,4 +30,16 @@ func (q *Query) GetUserPassword(userEmail, userType string) (string, int, bool, 
 		return "", -1, false, err
 	}
 	return db_password, db_id, true, nil
+}
+
+func (q *Query) VerifyUser(userEmail, userType string, userID int) (bool, error) {
+	var exists int
+	query := fmt.Sprintf("SELECT 1 FROM %s WHERE email = $1 AND id = $2", userType)
+	if err := q.db.QueryRow(query, userEmail, userID).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

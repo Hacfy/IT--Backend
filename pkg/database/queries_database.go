@@ -50,6 +50,7 @@ func (db *Query) InitialiseDBqueries() error {
 		`CREATE TABLE IF NOT EXISTS super_admins (
 			id SERIAL PRIMARY KEY,
 			org_id INTEGER NOT NULL,
+			name VARCHAR(50) NOT NULL,
 			email VARCHAR(50) NOT NULL,
 			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(org_id) ON DELETE CASCADE,
