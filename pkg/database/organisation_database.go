@@ -27,11 +27,11 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 		}
 	}()
 
-	if _, err := tx.Exec(query1, superAdmin.Email, "super_admins"); err != nil {
+	if _, err := tx.Exec(query1, superAdmin.SuperAdminEmail, "super_admins"); err != nil {
 		return -1, err
 	}
 
-	if err := tx.QueryRow(query2, superAdmin.Org_ID, superAdmin.Name, superAdmin.Email, superAdmin.Password).Scan(&sa_id); err != nil {
+	if err := tx.QueryRow(query2, superAdmin.Org_ID, superAdmin.SuperAdminName, superAdmin.SuperAdminEmail, superAdmin.SuperAdminPassword).Scan(&sa_id); err != nil {
 		return -1, err
 	}
 
@@ -39,4 +39,33 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 
 }
 
-func (q *Query) DeleteSuperAdmin(superAdminEmail string)
+func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
+	var superAdminID, supersuperAdminOrgID int
+	query1 := "DELETE FROM super_admins WHERE email = $1 RETURNING org_id, id"
+	query2 := "INSERT INTO deleted_super_admins(super_admin_id, org_id, email) VALUES($1, $2, $3)"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if err := tx.QueryRow(query1, superAdminEmail).Scan(&supersuperAdminOrgID, &superAdminID); err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(query2, superAdminID, supersuperAdminOrgID, superAdminEmail); err != nil {
+		return err
+	}
+
+	return nil
+}

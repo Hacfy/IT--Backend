@@ -15,7 +15,6 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:3000", "http://localhost:3001"},
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
 	mainAdminHandler := handlers.NewMainAdmin_Handler(repository.NewMainAdminRepo(db))

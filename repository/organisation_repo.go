@@ -101,27 +101,28 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 
 	var SuperAdmin models.SuperAdminModel
 
-	SuperAdmin.Name = strings.ToLower(new_sa.SuperAdminName)
+	SuperAdmin.SuperAdminName = strings.ToLower(new_sa.SuperAdminName)
 
 	SuperAdmin.Org_ID = claims.UserID
 
-	SuperAdmin.Password = hash
+	SuperAdmin.SuperAdminPassword = hash
 
-	SuperAdmin.ID, err = query.CreateSuperAdmin(SuperAdmin)
+	SuperAdmin.SuperAdminID, err = query.CreateSuperAdmin(SuperAdmin)
 	if err != nil {
 		log.Printf("error while storing SuperAdmin data in DB: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("unable to register SuperAdmin at the moment, please try again later")
 	}
 
 	go func() {
-		log.Printf("sending login credentials to %v", SuperAdmin.Email)
-		utils.SendLoginCredentials(SuperAdmin.Email, password)
-		log.Printf("credentials sent to %v", SuperAdmin.Email)
+		log.Printf("sending login credentials to %v", SuperAdmin.SuperAdminEmail)
+		utils.SendLoginCredentials(SuperAdmin.SuperAdminEmail, password)
+		log.Printf("credentials sent to %v", SuperAdmin.SuperAdminEmail)
 	}()
 
 	return http.StatusCreated, nil
 }
 
+// should be completed
 func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 	var tokenModel models.UserTokenModel
 
@@ -176,5 +177,10 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
 	}
 
-	query.DeleteSuperAdmin(del_sa.SuperAdminEmail)
+	if err := query.DeleteSuperAdmin(del_sa.SuperAdminEmail); err != nil {
+		log.Printf("error while deleting the user %v: %v", del_sa.SuperAdminEmail, err)
+		return http.StatusInternalServerError, fmt.Errorf("error while deleting superAdmin, please try again later")
+	}
+
+	return http.StatusNoContent, nil
 }
