@@ -91,12 +91,6 @@ func (ma *MainAdminRepo) CreateMainAdmin(e echo.Context) (int, error) {
 		log.Printf("credentials sent to %v", main_admin.MainAdminEmail)
 	}()
 
-	// token, err := utils.GenerateMainAdminToken(main_admin)
-	// if err != nil {
-	// 	log.Printf("error while generating token for user %s: %v", main_admin.MainAdminEmail, err)
-	// 	return "", fmt.Errorf("unable to generate token, please try again later")
-	// }
-
 	return http.StatusCreated, nil
 }
 
@@ -129,13 +123,15 @@ func (ma *MainAdminRepo) LoginMainAdmin(e echo.Context) (int, string, string, st
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid main admin credentials")
 	}
 
-	accessToken, err := utils.GenerateCookieToken(db_ma.MainAdminEmail, "main_admin", db_ma.MainAdminID, time.Now().Local().Add(24*time.Hour).Unix())
+	DB_iat := time.Now().Local().Unix()
+
+	accessToken, err := utils.GenerateCookieToken(db_ma.MainAdminEmail, "main_admin", db_ma.MainAdminID, time.Now().Local().Add(24*time.Hour).Unix(), DB_iat)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", db_ma.MainAdminEmail, err)
 		return http.StatusInternalServerError, "", "", "", err
 	}
 
-	refreshToken, err := utils.GenerateCookieToken(db_ma.MainAdminEmail, "main_admin", db_ma.MainAdminID, time.Now().Local().Add(7*24*time.Hour).Unix())
+	refreshToken, err := utils.GenerateCookieToken(db_ma.MainAdminEmail, "main_admin", db_ma.MainAdminID, time.Now().Local().Add(7*24*time.Hour).Unix(), DB_iat)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", db_ma.MainAdminEmail, err)
 		return http.StatusInternalServerError, "", "", "", err
@@ -201,6 +197,13 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failded to validate request")
 	}
 
+	createOrganisationPassword := os.Getenv("ORGANISATION_PASSWORD")
+
+	if new_org.CreateOrganisationPassword != createOrganisationPassword {
+		log.Printf("wrong create_organisation_password")
+		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
+	}
+
 	password, err := utils.GeneratePassword()
 	if err != nil {
 		log.Printf("error while generating password: %v", err)
@@ -227,6 +230,8 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 
 	organisation.OrganisationName = strings.ToLower(new_org.OrganisationName)
 
+	organisation.OrganisationPhoneNumber = new_org.OrganisationPhoneNumber
+
 	organisation.OrganisationPassword = hash
 
 	organisation.OrganisationMainAdminID = claims.MainAdminID
@@ -243,11 +248,137 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 		log.Printf("credentials sent to %v", organisation.OrganisationEmail)
 	}()
 
-	// OrgToken, err := utils.GenerateOrganisationToken(organisation)
-	// if err != nil {
-	// 	log.Printf("error while generating token for organisaion %s: %v", organisation.OrganisationEmail, err)
-	// 	return fmt.Errorf("unable to generate token, please try again later")
-	// }
-
 	return http.StatusCreated, nil
+}
+
+func (ma *MainAdminRepo) DeleteMainAdmin(e echo.Context) (int, error) {
+
+	var tokenModel models.MainAdminTokenModel
+
+	tokenString := e.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		log.Printf("missgin token")
+		return http.StatusUnauthorized, fmt.Errorf("missing token")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Printf("invalid token: %v", err)
+		return http.StatusUnauthorized, fmt.Errorf("invalid token")
+	}
+
+	claims, ok := token.Claims.(*models.MainAdminTokenModel)
+	if (ok && token.Valid) != true {
+		log.Printf("token expired or not of MainAdminTokenModel")
+		return http.StatusUnauthorized, fmt.Errorf("invalid token")
+	}
+
+	query := database.NewDBinstance(ma.db)
+
+	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
+	if err != nil {
+		log.Printf("Error checking main admin details:", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid main admin details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid main admin details")
+	}
+
+	var main_admin models.DeleteMainAdminModel
+
+	if err = e.Bind(&main_admin); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(main_admin); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failded to validate request")
+	}
+
+	companyPassword := os.Getenv("COMPANY_PASSWORD")
+
+	if main_admin.CompanyPassword != companyPassword {
+		log.Printf("wrong company_password")
+		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
+	}
+
+	status, err := query.DeleteMainAdmin(main_admin.MainAdminEmail)
+	if err != nil {
+		log.Printf("error while deleting the main admin from database %v: %v", main_admin.MainAdminEmail, err)
+		return status, fmt.Errorf("error while deleting main admin")
+	}
+
+	return status, nil
+}
+
+func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
+
+	var tokenModel models.MainAdminTokenModel
+
+	tokenString := e.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		log.Printf("missgin token")
+		return http.StatusUnauthorized, fmt.Errorf("missing token")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Printf("invalid token: %v", err)
+		return http.StatusUnauthorized, fmt.Errorf("invalid token")
+	}
+
+	claims, ok := token.Claims.(*models.MainAdminTokenModel)
+	if (ok && token.Valid) != true {
+		log.Printf("token expired or not of MainAdminTokenModel")
+		return http.StatusUnauthorized, fmt.Errorf("invalid token")
+	}
+
+	query := database.NewDBinstance(ma.db)
+
+	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
+	if err != nil {
+		log.Printf("Error checking main admin details:", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid main admin details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid main admin details")
+	}
+
+	var del_org models.DeleteOrganisationModel
+
+	if err = e.Bind(&del_org); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(del_org); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failded to validate request")
+	}
+
+	deleteOrganisationPassword := os.Getenv("ORGANISATION_PASSWORD")
+
+	if del_org.DeleteOrganisationPassword != deleteOrganisationPassword {
+		log.Printf("wrong delete_organisation_password")
+		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
+	}
+
+	status, err := query.DeleteOrganisation(del_org.OrganisationEmail)
+	if err != nil {
+		log.Printf("error while deleting the organisation %v: %v", del_org.OrganisationEmail, err)
+		return status, fmt.Errorf("error while deleting organisation, please try again later")
+	}
+
+	return status, nil
 }

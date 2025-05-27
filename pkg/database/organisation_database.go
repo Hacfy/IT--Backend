@@ -42,6 +42,7 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
 	var superAdminID, supersuperAdminOrgID int
 	query1 := "DELETE FROM super_admins WHERE email = $1 RETURNING org_id, id"
+	query3 := "DELETE FROM users WHERE user_email = $1"
 	query2 := "INSERT INTO deleted_super_admins(super_admin_id, org_id, email) VALUES($1, $2, $3)"
 
 	tx, err := q.db.Begin()
@@ -64,6 +65,10 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
 	}
 
 	if _, err := tx.Exec(query2, superAdminID, supersuperAdminOrgID, superAdminEmail); err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(query3, superAdminEmail); err != nil {
 		return err
 	}
 

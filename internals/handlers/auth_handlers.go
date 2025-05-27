@@ -12,12 +12,20 @@ type AuthHandler struct {
 	AuthRepo models.UserInterface
 }
 
+func NewAuthHandler(user models.UserInterface) *AuthHandler {
+	return &AuthHandler{
+		AuthRepo: user,
+	}
+}
+
 func (ah *AuthHandler) UserLoginHandler(e echo.Context) error {
 	status, accessToken, refreshToken, token, err := ah.AuthRepo.UserLogin(e)
 	if err != nil {
+		if status == http.StatusFound {
+			return e.Redirect(http.StatusFound, "/change-password")
+		}
 		return e.JSON(status, echo.Map{
-			"error":   err.Error(),
-			"message": "unsuccessfull",
+			"error": err.Error(),
 		})
 	}
 

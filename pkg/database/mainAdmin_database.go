@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"net/http"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
 )
@@ -32,7 +33,7 @@ func (q *Query) CreateOrganisation(organisation models.OrganisationModel) (int, 
 	var orgID int
 
 	query1 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query2 := "INSERT INTO organisations(main_admin_id, name, email, password) VALUES($1, $2, $3, $4) RETURNING id"
+	query2 := "INSERT INTO organisations(main_admin_id, name, email, phone_number, password) VALUES($1, $2, $3, $4, $5) RETURNING id"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -53,7 +54,7 @@ func (q *Query) CreateOrganisation(organisation models.OrganisationModel) (int, 
 		return -1, err
 	}
 
-	if err := tx.QueryRow(query2, organisation.OrganisationMainAdminID, organisation.OrganisationName, organisation.OrganisationEmail, organisation.OrganisationPassword).Scan(&orgID); err != nil {
+	if err := tx.QueryRow(query2, organisation.OrganisationMainAdminID, organisation.OrganisationName, organisation.OrganisationEmail, organisation.OrganisationPhoneNumber, organisation.OrganisationPassword).Scan(&orgID); err != nil {
 		return -1, err
 	}
 
@@ -75,4 +76,26 @@ func (q *Query) GetMainAdminCredentials(main_admin_email string) (models.MainAdm
 		MainAdminEmail:    main_admin_email,
 		MainAdminPassword: main_admin_password,
 	}, true, nil
+}
+
+func (q *Query) DeleteMainAdmin(mainAdminEmail string) (int, error) {
+	query := "DELETE FROM main_admin WHERE main_admin_email = $1"
+	if _, err := q.db.Exec(query, mainAdminEmail); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, err
+		}
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusNoContent, nil
+}
+
+func (q *Query) DeleteOrganisation(organisationEmail string) (int, error) {
+	query := "DELETE FROM organisations WHERE email = $1"
+	if _, err := q.db.Exec(query, organisationEmail); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, err
+		}
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusNoContent, nil
 }

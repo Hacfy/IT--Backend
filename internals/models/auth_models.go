@@ -13,10 +13,16 @@ type LoginModel struct {
 type UserTokenModel struct {
 	UserID    int    `json:"user_id"`
 	UserEmail string `json:"user_email"`
+	UserName  string `json:"user_name"`
 	UserType  string `json:"user_type"`
 	jwt.RegisteredClaims
 }
 
 type UserInterface interface {
 	UserLogin(echo.Context) (int, string, string, string, error)
+}
+
+type ChangePasswordModel struct {
+	OldPassword string `json:"old_password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
 }

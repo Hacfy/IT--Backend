@@ -22,3 +22,15 @@ type CreateBranchModel struct {
 	BranchHeadName  string `json:"branch_head_name" validate:"required"`
 	BranchHeadEmail string `json:"branch_head_email" validate:"required,email"`
 }
+
+type DeleteBranchModel struct {
+	BranchID  int    `json:"branch_id" validate:"required"`
+	BrachName string `json:"branch_name" validate:"required"`
+}
+
+type UpdateBranchHeadModel struct {
+	BranchHeadID       int    `json:"branch_head_id" validate:"required"`
+	BranchHeadEmail    string `json:"branch_head_email" validate:"required,email"`
+	NewBranchHeadName  string `json:"new_branch_head_name" validate:"required"`
+	NewBranchHeadEmail string `json:"new_branch_head_email" validate:"required,email"`
+}

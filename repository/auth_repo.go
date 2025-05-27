@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
 	"github.com/Hacfy/IT_INVENTORY/pkg/database"
 	"github.com/Hacfy/IT_INVENTORY/pkg/utils"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -47,7 +49,16 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid user credentials")
 	}
 
-	db_password, db_id, ok, err := query.GetUserPasswordID(req_user.Email, userType)
+	T, err := query.CheckUserLoggedIn(req_user.Email)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("error while checking user details")
+	}
+
+	if !T {
+		return http.StatusFound, "", "", "", fmt.Errorf("redirect")
+	}
+
+	db_password, db_name, db_id, ok, err := query.GetUserPasswordID(req_user.Email, userType)
 	if err != nil {
 		log.Printf("Error checking user details:", err)
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")
@@ -61,19 +72,21 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 		return http.StatusBadRequest, "", "", "", fmt.Errorf("invalid user credentials")
 	}
 
-	accessToken, err := utils.GenerateCookieToken(req_user.Email, userType, db_id, time.Now().Local().Add(24*time.Hour).Unix())
+	token_iat := time.Now().Local().Unix()
+
+	accessToken, err := utils.GenerateCookieToken(req_user.Email, userType, db_id, time.Now().Local().Add(24*time.Hour).Unix(), token_iat)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
 		return http.StatusInternalServerError, "", "", "", err
 	}
 
-	refreshToken, err := utils.GenerateCookieToken(req_user.Email, userType, db_id, time.Now().Local().Add(7*24*time.Hour).Unix())
+	refreshToken, err := utils.GenerateCookieToken(req_user.Email, userType, db_id, time.Now().Local().Add(7*24*time.Hour).Unix(), token_iat)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
 		return http.StatusInternalServerError, "", "", "", err
 	}
 
-	token, err := utils.GenerateUserToken(req_user.Email, userType, db_id, time.Now().Local().Add(7*24*time.Hour).Unix())
+	token, err := utils.GenerateUserToken(req_user.Email, userType, db_name, db_id, time.Now().Local().Add(7*24*time.Hour).Unix(), token_iat)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
 		return http.StatusInternalServerError, "", "", "", err
@@ -81,4 +94,101 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 
 	return http.StatusOK, accessToken, refreshToken, token, nil
 
+}
+
+func (ar *AuthRepo) ChangeUserPassword(e echo.Context) (int, string, string, string, error) {
+
+	var tokenModel models.UserTokenModel
+
+	tokenString := e.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		log.Printf("missgin token")
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("missing token")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Printf("invalid token: %v", err)
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid token")
+	}
+
+	claims, ok := token.Claims.(*models.UserTokenModel)
+	if (ok && token.Valid) != true {
+		log.Printf("token expired or not of UserTokenModel")
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid token")
+	}
+
+	query := database.NewDBinstance(ar.db)
+
+	Time, err := query.GetLatestTokenTime(claims.UserEmail, claims.UserType)
+	if err != nil || Time.IsZero() {
+		log.Printf("error while getting latest token time: %v", err)
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")
+	}
+
+	if Time.After(claims.IssuedAt.Time) {
+		log.Printf("token expired or not of UserTokenModel")
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid token")
+	}
+
+	var req_user models.ChangePasswordModel
+
+	if err := e.Bind(&req_user); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, "", "", "", fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(req_user); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, "", "", "", fmt.Errorf("failded to validate request")
+	}
+
+	if !utils.StrongPasswordValidator(req_user.NewPassword) {
+		log.Printf("invalid password")
+		return http.StatusBadRequest, "", "", "", fmt.Errorf("invalid password")
+	}
+
+	hash, err := utils.HashPassword(req_user.NewPassword)
+	if err != nil {
+		log.Printf("error while hashing password: %v", err)
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to secure your password, please try again")
+	}
+
+	status, err := query.ChangeUserPassword(hash, claims.UserEmail, claims.UserType)
+	if err != nil {
+		log.Printf("error while storing new password in DB: %v", err)
+		return status, "", "", "", fmt.Errorf("unable to update password at the moment, please try again later")
+	}
+
+	token_iat := time.Now().Local().Unix()
+
+	if err := query.UpdateUserTokenTimestamp(claims.UserEmail, token_iat); err != nil {
+		log.Printf("error while updating user token timestamp: %v", err)
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to update user token timestamp at the moment, please try again later")
+	}
+
+	accessToken, err := utils.GenerateCookieToken(claims.UserEmail, claims.UserType, claims.UserID, time.Now().Local().Add(24*time.Hour).Unix(), token_iat)
+	if err != nil {
+		log.Printf("error while generating token for user %s: %v", claims.UserEmail, err)
+		return http.StatusInternalServerError, "", "", "", err
+	}
+
+	refreshToken, err := utils.GenerateCookieToken(claims.UserEmail, claims.UserType, claims.UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), token_iat)
+	if err != nil {
+		log.Printf("error while generating token for user %s: %v", claims.UserEmail, err)
+		return http.StatusInternalServerError, "", "", "", err
+	}
+
+	Token, err := utils.GenerateUserToken(claims.UserEmail, claims.UserType, claims.UserName, claims.UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), token_iat)
+	if err != nil {
+		log.Printf("error while generating token for user %s: %v", claims.UserEmail, err)
+		return http.StatusInternalServerError, "", "", "", err
+	}
+
+	return http.StatusOK, accessToken, refreshToken, Token, nil
 }

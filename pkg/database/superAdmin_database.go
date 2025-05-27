@@ -1,8 +1,10 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
 )
@@ -46,5 +48,93 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 	}
 
 	return nil
+
+}
+
+func (q *Query) DeleteBranch(branch models.DeleteBranchModel, superAdminID int) (int, error) {
+	var exists int
+	query1 := "SELECT 1 FROM branches WHERE super_admin_id = $1 AND branch_id = $2"
+	query2 := "DELETE FROM branches WHERE branch_id = $1"
+	query3 := "INSERT INTO deleted_branches(branch_id, super_admin_id) VALUES($1, $2)"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if err := tx.QueryRow(query1, superAdminID, branch.BranchID).Scan(&exists); err != nil {
+		return http.StatusNotFound, err
+	}
+
+	if _, err := tx.Exec(query2, branch.BranchID); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if _, err := tx.Exec(query3, branch.BranchID, superAdminID); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusNoContent, nil
+
+}
+
+func (q *Query) UpdateBranchHead(branchHead models.UpdateBranchHeadModel, superAdminID int, password string) (int, error) {
+	query1 := "DELETE FROM branch_heads WHERE id =$1 RETURNING branch_id"
+	query2 := "DELETE FROM users WHERE user_email = $1"
+	query3 := "INSERT INTO deleted_branch_heads(branch_id, branch_head_id, email, deleted_by) VALUES($1, $2, $3, $4)"
+	query4 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
+	query5 := "INSERT INTO branch_heads(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	var branch_id int
+
+	if err := tx.QueryRow(query1, branchHead.BranchHeadID).Scan(&branch_id); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, err
+	}
+
+	if _, err := tx.Exec(query2, branchHead.BranchHeadEmail); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if _, err := tx.Exec(query3, branch_id, branchHead.BranchHeadID, branchHead.BranchHeadEmail, superAdminID); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if _, err := tx.Exec(query4, branchHead.NewBranchHeadEmail, "branch_heads"); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if _, err := tx.Exec(query5, branch_id, branchHead.NewBranchHeadName, branchHead.NewBranchHeadEmail, password); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
 
 }

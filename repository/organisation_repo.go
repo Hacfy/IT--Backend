@@ -183,4 +183,5 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 	}
 
 	return http.StatusNoContent, nil
+
 }

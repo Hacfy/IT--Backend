@@ -22,8 +22,7 @@ func (ma *MainAdminHandler) CreateMainAdminHandler(e echo.Context) error {
 	status, err := ma.MainAdminRepo.CreateMainAdmin(e)
 	if err != nil {
 		return e.JSON(status, echo.Map{
-			"error":   err.Error(),
-			"message": "unsuccessfull",
+			"error": err.Error(),
 		})
 	}
 
@@ -36,8 +35,7 @@ func (ma *MainAdminHandler) LoginMainAdminHandler(e echo.Context) error {
 	status, accessToken, refreshToken, token, err := ma.MainAdminRepo.LoginMainAdmin(e)
 	if err != nil {
 		return e.JSON(status, echo.Map{
-			"error":   err.Error(),
-			"message": "unsuccessfull",
+			"error": err.Error(),
 		})
 	}
 
@@ -67,8 +65,7 @@ func (ma *MainAdminHandler) CreateOrganisationHandler(e echo.Context) error {
 	status, err := ma.MainAdminRepo.CreateOrganisation(e)
 	if err != nil {
 		return e.JSON(status, echo.Map{
-			"message": "unsuccessfull",
-			"error":   err.Error(),
+			"error": err.Error(),
 		})
 	}
 

@@ -1,59 +1,204 @@
 package templates
 
 func GetVerifyEmailOtpTemplate(password, email string) string {
-	return `<!DOCTYPE html>
-<html>
+	return `
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Credintials - IT Management System</title>
+  <meta charset="UTF-8">
+  <title>HACFY - IT Inventory Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #1E275A;
+      color: #000;
+    }
+
+    .header {
+      text-align: center;
+      padding: 40px 20px 20px;
+      background-color: #1E275A;
+    }
+
+    .header img.logo {
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .header img.banner {
+      display: block;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 15px;
+      height: 60px;
+      width: 330px;
+      max-width: 90%;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 24px;
+      margin-top: 10px;
+    }
+
+    .main {
+      background-color: #ffffff;
+      border-top-left-radius: 40px;
+      border-top-right-radius: 40px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .main h2 {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .main p {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .form-box {
+      background-color: #1E275A;
+      padding: 30px 50px;
+      border-radius: 16px;
+      margin-top: 150px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      box-sizing: border-box;
+    }
+
+    .input-group {
+      position: relative;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .input-group i {
+      position: absolute;
+      top: 50%;
+      left: 15px;
+      transform: translateY(-50%);
+      color: gray;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 15px 15px 15px 45px;
+      border-radius: 20px;
+      border: none;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    .login-btn {
+      background-color: #ffffff;
+      color: #1E275A;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 10px;
+      /* width: ; */
+      font-weight: bold;
+    }
+
+    .login-btn:hover {
+      background-color: #ddd;
+    }
+
+    .form-box p {
+      color: white;
+      font-size: 11px;
+      margin-top: 20px;
+    }
+
+    .footer {
+      background-color: #ddd;
+      padding: 20px;
+      text-align: center;
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+    }
+
+    .footer p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .form-box {
+        padding: 20px;
+        margin-top: 100px;
+      }
+
+      .input-group input {
+        font-size: 14px;
+        padding-left: 40px;
+      }
+
+      .main h2 {
+        font-size: 22px;
+      }
+
+      .main p {
+        font-size: 14px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Poppins', Arial, sans-serif; background-color: #f4f4f4;">
-    <table role="presentation" style="width: 100%; border-collapse: collapse;">
-        <tr>
-            <td style="padding: 0;">
-                <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td style="padding: 20px 0; text-align: center; background-color: #4169E1; border-radius: 8px 8px 0 0;">
-                            <h1 style="color: #ffffff; font-size: 24px; margin: 0; font-weight: 600; font-family: 'Poppins', Arial, sans-serif;">IT Management System</h1>
-                        </td>
-                    </tr>
-                    <!-- Content -->
-                    <tr>
-                        <td style="padding: 40px 30px;">
-                            <h2 style="color: #333333; font-size: 22px; margin: 0 0 20px 0; font-family: 'Poppins', Arial, sans-serif;">Login Credintials</h2>
-                            <p style="color: #666666; font-size: 16px; line-height: 24px; margin: 0 0 20px 0; font-family: 'Poppins', Arial, sans-serif;">
-                                Please Login through the below mentioned email and password:
-                            </p>
-                            <!-- PASSWORD Code Box -->
-                            <div style="background-color: #f8f9fa; border: 2px solid #4169E1; border-radius: 6px; padding: 20px; text-align: center; margin: 30px 0;">
-                                <span style="font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #4169E1; letter-spacing: 5px;">
-                                    ` + email + `
-                                </span>
-                            </div>
-                            <div style="background-color: #f8f9fa; border: 2px solid #4169E1; border-radius: 6px; padding: 20px; text-align: center; margin: 30px 0;">
-                                <span style="font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #4169E1; letter-spacing: 5px;">
-                                    ` + password + `
-                                </span>
-                            </div>
-                            <p style="color: #d84c4c; font-size: 16px; line-height: 24px; margin: 0 0 20px 0; font-family: 'Poppins', Arial, sans-serif; font-weight: bold; text-decoration: underline;">
-                                This is a temporary password, please update your password.
-                            </p>                            
-                        </td>
-                    </tr>
-                    <!-- Footer -->
-                    <tr>
-                        <td style="padding: 30px; background-color: #f8f9fa; border-radius: 0 0 8px 8px; text-align: center;">
-                            <p style="color: #999999; font-size: 14px; margin: 0; font-family: 'Poppins', Arial, sans-serif;">
-                                © 2025 IT Management System. All Rights Reserved.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<body>
+
+  <div class="header">
+    <img src="/home/ashith/Hacfy/IT_INVENTORY/pkg/templates/hacfy png.png" class="logo" alt="Logo">
+    <img src="/home/ashith/Hacfy/IT_INVENTORY/pkg/templates/HACFY-C3Z81d0c.webp" class="banner" alt="Logo">
+    <h1>Welcome to IT Inventory!</h1>
+  </div>
+
+  <div class="main">
+    <h2>Login Credentials</h2>
+    <p>Please login through the below mentioned email and password</p>
+
+    <div class="form-box">
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="email" placeholder="Email" value="` + email + `"/>
+      </div>
+
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="password" placeholder="Password" value="` + password + `"/>
+      </div>
+
+      <button class="login-btn" id="loginBtn">Login</button>
+
+      <p>This is a temporary password. Please update your password</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>2025 IT Management System. All Rights Reserved</p>
+  </div>
+
+  <script>
+    document.getElementById("loginBtn").addEventListener("click", function () {
+      document.getElementById("email").value = ` + email + `;
+      document.getElementById("password").value = ` + password + `;
+    });
+  </script>
+
 </body>
-</html>`
+</html>
+`
 }
