@@ -3,11 +3,14 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"unicode"
 
+	"github.com/Hacfy/IT_INVENTORY/internals/models"
 	"github.com/Hacfy/IT_INVENTORY/pkg/database"
+	"github.com/Hacfy/IT_INVENTORY/pkg/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -43,10 +46,8 @@ func (wr *WarehouseRepo) generateUniquePrefix(name string) (string, error) {
 		}
 	}
 
-	// filler characters
 	filler := "zyxwvutsrqponmlkjihgfedcba"
 
-	// pad to length 3
 	for len(letters) < 3 {
 		letters += string(filler[0])
 	}
@@ -65,7 +66,6 @@ func (wr *WarehouseRepo) generateUniquePrefix(name string) (string, error) {
 			return "", fmt.Errorf("failed to generate unique prefix")
 		}
 
-		// increment prefix like base-N using filler characters
 		runes := []rune(prefix)
 		changed := false
 
@@ -85,7 +85,6 @@ func (wr *WarehouseRepo) generateUniquePrefix(name string) (string, error) {
 		}
 
 		if !changed {
-			// overflow: add one more character to the beginning
 			prefix = string(filler[0]) + string(runes)
 		} else {
 			prefix = string(runes)
@@ -96,10 +95,193 @@ func (wr *WarehouseRepo) generateUniquePrefix(name string) (string, error) {
 
 }
 
-func (wr *WarehouseRepo) CreateComponent(e echo.Context) (int, error) {
-	return http.StatusOK, nil
+func (wr *WarehouseRepo) CreateComponent(e echo.Context) (int, string, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, "", err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details:", err)
+		return http.StatusInternalServerError, "", fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, "", fmt.Errorf("invalid user details")
+	}
+
+	var new_component models.CreateComponentModel
+
+	if err := e.Bind(&new_component); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, "", fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(new_component); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, "", fmt.Errorf("failed to validate request")
+	}
+
+	if ok := query.IfComponentExists(new_component.ComponentName, claims.UserID); !ok {
+		log.Printf("component %v already exists", new_component.ComponentName)
+		return http.StatusConflict, "", fmt.Errorf("component already exists")
+	}
+
+	Prefix, err := wr.generateUniquePrefix(new_component.ComponentName)
+	if err != nil {
+		log.Printf("error while generating prefix: %v", err)
+		return http.StatusInternalServerError, "", fmt.Errorf("failed to generate prefix, please try again later")
+	}
+
+	component_id, err := query.CreateComponent(new_component.ComponentName, Prefix, claims.UserID)
+	if err != nil {
+		log.Printf("error while storing Component data in DB: %v", err)
+		return http.StatusInternalServerError, "", fmt.Errorf("unable to create component at the moment, please try again later")
+	}
+
+	token, err := utils.GenerateComponentToken(component_id, new_component.ComponentName, Prefix)
+	if err != nil {
+		log.Printf("error while generating token: %v", err)
+		return http.StatusInternalServerError, "", fmt.Errorf("failed to generate token, please try again later")
+	}
+
+	return http.StatusOK, token, nil
 }
 
 func (wr *WarehouseRepo) DeleteComponent(e echo.Context) (int, error) {
-	return http.StatusOK, nil
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details:", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var del_component models.DeleteComponentModel
+
+	if err := e.Bind(&del_component); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(del_component); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	if status, err := query.DeleteComponent(del_component, claims.UserID); err != nil {
+		log.Printf("error while deleting the component %v: %v", del_component.ComponentID, err)
+		return status, fmt.Errorf("error while deleting the component")
+	}
+
+	return http.StatusNoContent, nil
+}
+
+func (wr *WarehouseRepo) AddComponentUnits(e echo.Context) (int, error) {
+
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details:", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var new_component_unit models.AddUnitModel
+
+	if err := e.Bind(&new_component_unit); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(new_component_unit); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	prefix, exists, err := query.CheckIfComponentIDExists(new_component_unit.ComponentID, claims.UserID)
+	if err != nil {
+		log.Printf("error while checking if component exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if exists {
+		log.Printf("component with id %v does not exist", new_component_unit.ComponentID)
+		return http.StatusBadRequest, fmt.Errorf("component with id %v does not exist", new_component_unit.ComponentID)
+	}
+
+	status, err = query.CreateComponentUnit(new_component_unit.Warenty_Date, float32(new_component_unit.Cost), prefix, claims.UserID, new_component_unit.Number_of_units, new_component_unit.ComponentID)
+	if err != nil {
+		log.Printf("error while creating units of %v: %v", new_component_unit.ComponentID, err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusCreated, nil
+}
+
+func (wr *WarehouseRepo) AssignUnits(e echo.Context) (int, error) {
+
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details:", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var new_unit models.AssignUnitModel
+
+	if err := e.Bind(&new_unit); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(new_unit); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	prefix, exists, err := query.CheckIfComponentIDExists(new_unit.ComponentID, claims.UserID)
+	if err != nil {
+		log.Printf("error while checking if component exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if !exists {
+		log.Printf("component with id %v does not exist", new_unit.ComponentID)
+		return http.StatusBadRequest, fmt.Errorf("component with id %v does not exist", new_unit.ComponentID)
+	}
+
+	status, err = query.AssignUnitWorkspace(new_unit.WorkspaceID, new_unit.UnitIDs, prefix)
+	if err != nil {
+		log.Printf("error while assigning units to workspace: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusCreated, nil
+
 }

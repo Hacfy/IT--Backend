@@ -39,8 +39,8 @@ func (q *Query) GetUserType(userEmail string) (string, bool, error) {
 	return userType, true, nil
 }
 
-func (q *Query) UpdateUserTokenTimestamp(email string, T int64) error {
-	query := "UPDATE users SET latest_token = $1 WHERE email = $2"
+func (q *Query) UpdateUserTokenTimestamp(email string, T time.Time) error {
+	query := "UPDATE users SET latest_token = $1 WHERE user_email = $2"
 	if _, err := q.db.Exec(query, T, email); err != nil {
 		return err
 	}
@@ -51,8 +51,8 @@ func (q *Query) GetUserPasswordID(userEmail, userType string) (string, string, i
 	var db_password, db_name string
 	var db_id int
 
-	query := fmt.Sprintln("SELECT password, id, name FROM %s WHERE email = $1", userType)
-	if err := q.db.QueryRow(query, userEmail).Scan(&db_password, &db_name, &db_id); err != nil {
+	query := fmt.Sprintf("SELECT password, id, name FROM %s WHERE email = $1", userType)
+	if err := q.db.QueryRow(query, userEmail).Scan(&db_password, &db_id, &db_name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", "", -1, false, nil
 		}
@@ -82,6 +82,7 @@ func (q *Query) GetLatestTokenTime(userEmail, userType string) (time.Time, error
 		}
 		return time.Time{}, err
 	}
+
 	return latestToken, nil
 }
 

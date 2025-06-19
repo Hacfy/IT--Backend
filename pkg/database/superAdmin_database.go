@@ -19,7 +19,7 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return err
 	}
 
 	defer func() {
@@ -60,7 +60,7 @@ func (q *Query) DeleteBranch(branch models.DeleteBranchModel, superAdminID int) 
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return http.StatusInternalServerError, err
 	}
 
 	defer func() {
@@ -98,7 +98,7 @@ func (q *Query) UpdateBranchHead(branchHead models.UpdateBranchHeadModel, superA
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return http.StatusInternalServerError, err
 	}
 
 	defer func() {

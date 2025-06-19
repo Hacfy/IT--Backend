@@ -24,4 +24,5 @@ type DeleteSuperAdminModel struct {
 type SuperAdminInterface interface {
 	CreateBranch(echo.Context) (int, error)
 	DeleteBranch(echo.Context) (int, error)
+	UpdateBranchHead(echo.Context) (int, error)
 }

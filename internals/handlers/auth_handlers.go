@@ -24,9 +24,35 @@ func (ah *AuthHandler) UserLoginHandler(e echo.Context) error {
 		if status == http.StatusFound {
 			return e.Redirect(http.StatusFound, "/change-password")
 		}
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	accessCookie := new(http.Cookie)
+	accessCookie.Name = "access_token"
+	accessCookie.Value = accessToken
+	accessCookie.HttpOnly = true
+	accessCookie.Secure = false
+	accessCookie.Expires = time.Now().Add(15 * time.Hour)
+	e.SetCookie(accessCookie)
+
+	refreshCookie := new(http.Cookie)
+	refreshCookie.Name = "refresh_token"
+	refreshCookie.Value = refreshToken
+	refreshCookie.HttpOnly = true
+	refreshCookie.Secure = false
+	refreshCookie.Expires = time.Now().Add(7 * 24 * time.Hour)
+	e.SetCookie(refreshCookie)
+
+	return e.JSON(status, echo.Map{
+		"message": "logged in successfully",
+		"token":   token,
+	})
+}
+
+func (ah *AuthHandler) ChangeUserPasswordHandler(e echo.Context) error {
+	status, accessToken, refreshToken, token, err := ah.AuthRepo.ChangeUserPassword(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
 	}
 
 	accessCookie := new(http.Cookie)
@@ -48,5 +74,32 @@ func (ah *AuthHandler) UserLoginHandler(e echo.Context) error {
 	return e.JSON(status, echo.Map{
 		"message": "successfull",
 		"token":   token,
+	})
+}
+
+func (ah *AuthHandler) UserLogoutHandler(e echo.Context) error {
+	status, err := ah.AuthRepo.UserLogout(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	accessCookie := new(http.Cookie)
+	accessCookie.Name = "access_token"
+	accessCookie.Value = ""
+	accessCookie.HttpOnly = true
+	accessCookie.Secure = false
+	accessCookie.Expires = time.Time{}
+	e.SetCookie(accessCookie)
+
+	refreshCookie := new(http.Cookie)
+	refreshCookie.Name = "refresh_token"
+	refreshCookie.Value = ""
+	refreshCookie.HttpOnly = true
+	refreshCookie.Secure = false
+	refreshCookie.Expires = time.Time{}
+	e.SetCookie(refreshCookie)
+
+	return e.JSON(status, echo.Map{
+		"message": "logged out successfully",
 	})
 }

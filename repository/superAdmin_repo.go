@@ -108,7 +108,9 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", branch.BranchHeadEmail)
-		utils.SendLoginCredentials(branch.BranchHeadEmail, password)
+		if err := utils.SendLoginCredentials(branch.BranchHeadEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", branch.BranchHeadEmail, err)
+		}
 		log.Printf("credentials sent to %v", branch.BranchHeadEmail)
 	}()
 
@@ -116,39 +118,14 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 }
 
 func (sa *SuperAdminRepo) DeleteBranch(e echo.Context) (int, error) {
-	var tokenModel models.UserTokenModel
-
-	tokenString := e.Request().Header.Get("Authorization")
-	if tokenString == "" {
-		log.Printf("missgin token")
-		return http.StatusUnauthorized, fmt.Errorf("missing token")
-	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-
-	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
-	})
-
+	status, claims, err := utils.VerifyUserToken(e, "super_admins", sa.db)
 	if err != nil {
-		log.Printf("invalid token: %v", err)
-		return http.StatusUnauthorized, fmt.Errorf("invalid token")
-	}
-
-	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
-		log.Printf("token expired or not of UserTokenModel")
-		return http.StatusUnauthorized, fmt.Errorf("invalid token")
-	}
-
-	if claims.UserType != "super_admins" {
-		log.Printf("invalid userType, required userType %v given %v", "super_admins", claims.UserType)
-		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
+		return status, err
 	}
 
 	query := database.NewDBinstance(sa.db)
 
-	ok, err = query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details:", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -263,7 +240,9 @@ func (sa *SuperAdminRepo) UpdateBranchHead(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", branchHead.NewBranchHeadEmail)
-		utils.SendLoginCredentials(branchHead.NewBranchHeadEmail, password)
+		if err := utils.SendLoginCredentials(branchHead.NewBranchHeadEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", branchHead.NewBranchHeadEmail, err)
+		}
 		log.Printf("credentials sent to %v", branchHead.NewBranchHeadEmail)
 	}()
 

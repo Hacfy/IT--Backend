@@ -160,7 +160,10 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return []byte(jwtSecret), nil
 	})
 
 	if err != nil {
@@ -244,7 +247,9 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", organisation.OrganisationEmail)
-		utils.SendLoginCredentials(organisation.OrganisationEmail, password)
+		if err := utils.SendLoginCredentials(organisation.OrganisationEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", organisation.OrganisationEmail, err)
+		}
 		log.Printf("credentials sent to %v", organisation.OrganisationEmail)
 	}()
 

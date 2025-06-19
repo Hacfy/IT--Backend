@@ -21,9 +21,7 @@ func NewMainAdmin_Handler(mainAdmin models.MainAdminInterface) *MainAdminHandler
 func (ma *MainAdminHandler) CreateMainAdminHandler(e echo.Context) error {
 	status, err := ma.MainAdminRepo.CreateMainAdmin(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
 	}
 
 	return e.JSON(status, echo.Map{
@@ -34,9 +32,7 @@ func (ma *MainAdminHandler) CreateMainAdminHandler(e echo.Context) error {
 func (ma *MainAdminHandler) LoginMainAdminHandler(e echo.Context) error {
 	status, accessToken, refreshToken, token, err := ma.MainAdminRepo.LoginMainAdmin(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
 	}
 
 	accessCookie := new(http.Cookie)
@@ -64,9 +60,29 @@ func (ma *MainAdminHandler) LoginMainAdminHandler(e echo.Context) error {
 func (ma *MainAdminHandler) CreateOrganisationHandler(e echo.Context) error {
 	status, err := ma.MainAdminRepo.CreateOrganisation(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (ma *MainAdminHandler) DeleteMainAdminHandler(e echo.Context) error {
+	status, err := ma.MainAdminRepo.DeleteMainAdmin(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (ma *MainAdminHandler) DeleteOrganisationHandler(e echo.Context) error {
+	status, err := ma.MainAdminRepo.DeleteOrganisation(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
 	}
 
 	return e.JSON(status, echo.Map{

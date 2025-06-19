@@ -18,9 +18,7 @@ func NewSuperAdminHandler(superAdmin models.SuperAdminInterface) *SuperAdminHand
 func (sa *SuperAdminHandler) CreateBranchHandler(e echo.Context) error {
 	status, err := sa.SuperAdminRepo.CreateBranch(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
 	}
 	return e.JSON(status, echo.Map{
 		"message": "successfull",
@@ -30,9 +28,18 @@ func (sa *SuperAdminHandler) CreateBranchHandler(e echo.Context) error {
 func (sa *SuperAdminHandler) DeleteBranchHandler(e echo.Context) error {
 	status, err := sa.SuperAdminRepo.DeleteBranch(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (sa *SuperAdminHandler) UpdateBranchHeadHandler(e echo.Context) error {
+	status, err := sa.SuperAdminRepo.UpdateBranchHead(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
 	}
 
 	return e.JSON(status, echo.Map{

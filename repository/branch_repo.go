@@ -79,7 +79,9 @@ func (br *BranchRepo) CreateDepartment(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", new_department.DepartmentHeadEmail)
-		utils.SendLoginCredentials(new_department.DepartmentHeadEmail, password)
+		if err := utils.SendLoginCredentials(new_department.DepartmentHeadEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", new_department.DepartmentHeadEmail, err)
+		}
 		log.Printf("credentials sent to %v", new_department.DepartmentHeadEmail)
 	}()
 
@@ -144,7 +146,9 @@ func (br *BranchRepo) CreateWarehouse(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", new_warehouse.WarehouseUserEmail)
-		utils.SendLoginCredentials(new_warehouse.WarehouseUserEmail, password)
+		if err := utils.SendLoginCredentials(new_warehouse.WarehouseUserEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", new_warehouse.WarehouseUserEmail, err)
+		}
 		log.Printf("credentials sent to %v", new_warehouse.WarehouseUserEmail)
 	}()
 
@@ -208,7 +212,9 @@ func (br *BranchRepo) UpdateDepartmentHead(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", new_department_head.NewDepartmentHeadEmail)
-		utils.SendLoginCredentials(new_department_head.NewDepartmentHeadEmail, password)
+		if err := utils.SendLoginCredentials(new_department_head.NewDepartmentHeadEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", new_department_head.NewDepartmentHeadEmail, err)
+		}
 		log.Printf("credentials sent to %v", new_department_head.NewDepartmentHeadEmail)
 	}()
 
@@ -272,7 +278,9 @@ func (br *BranchRepo) UpdateWarehouseHead(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", new_warehouse_head.NewWarehouseHeadEmail)
-		utils.SendLoginCredentials(new_warehouse_head.NewWarehouseHeadEmail, password)
+		if err := utils.SendLoginCredentials(new_warehouse_head.NewWarehouseHeadEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", new_warehouse_head.NewWarehouseHeadEmail, err)
+		}
 		log.Printf("credentials sent to %v", new_warehouse_head.NewWarehouseHeadEmail)
 	}()
 

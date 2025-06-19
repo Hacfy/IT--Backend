@@ -34,6 +34,8 @@ type MainAdminInterface interface {
 	CreateMainAdmin(echo.Context) (int, error)
 	CreateOrganisation(echo.Context) (int, error)
 	LoginMainAdmin(echo.Context) (int, string, string, string, error)
+	DeleteMainAdmin(echo.Context) (int, error)
+	DeleteOrganisation(echo.Context) (int, error)
 }
 
 type MainAdminTokenModel struct {

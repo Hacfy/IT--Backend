@@ -79,7 +79,7 @@ func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHea
 		return http.StatusInternalServerError, err
 	}
 
-	if err := tx.QueryRow(query1, warehouse.WarehouseUserEmail, "warehouse_users").Scan(&warehouse_id); err != nil {
+	if err := tx.QueryRow(query1, warehouse.WarehouseUserEmail, "warehouses").Scan(&warehouse_id); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
@@ -100,7 +100,7 @@ func (q *Query) UpdateDepartmentHead(department_head models.UpdateDepartmentHead
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return http.StatusInternalServerError, err
 	}
 
 	defer func() {
@@ -149,7 +149,7 @@ func (q *Query) UpdateWarehouseHead(warehouse_head models.UpdateWarehouseHeadMod
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return http.StatusInternalServerError, err
 	}
 
 	defer func() {
@@ -163,7 +163,7 @@ func (q *Query) UpdateWarehouseHead(warehouse_head models.UpdateWarehouseHeadMod
 
 	var warehouse_id int
 
-	if _, err := tx.Exec(query1, warehouse_head.NewWarehouseHeadEmail, "warehouse_heads"); err != nil {
+	if _, err := tx.Exec(query1, warehouse_head.NewWarehouseHeadEmail, "warehouses"); err != nil {
 		return http.StatusInternalServerError, err
 	}
 

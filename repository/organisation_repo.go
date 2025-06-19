@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
 	"github.com/Hacfy/IT_INVENTORY/pkg/database"
 	"github.com/Hacfy/IT_INVENTORY/pkg/utils"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,39 +24,14 @@ func NewOrgRepo(db *sql.DB) *OrgRepo {
 }
 
 func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
-	var tokenModel models.UserTokenModel
-
-	tokenString := e.Request().Header.Get("Authorization")
-	if tokenString == "" {
-		log.Printf("missgin token")
-		return http.StatusUnauthorized, fmt.Errorf("missing token")
-	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-
-	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
-	})
-
+	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
 	if err != nil {
-		log.Printf("invalid token: %v", err)
-		return http.StatusUnauthorized, fmt.Errorf("invalid token")
-	}
-
-	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
-		log.Printf("token expired or not of UserTokenModel")
-		return http.StatusUnauthorized, fmt.Errorf("invalid token")
-	}
-
-	if claims.UserType != "organisations" {
-		log.Printf("invalid userType, required userType %v given %v", "organisations", claims.UserType)
-		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
+		return status, err
 	}
 
 	query := database.NewDBinstance(or.db)
 
-	ok, err = query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details:", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -115,7 +88,9 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 
 	go func() {
 		log.Printf("sending login credentials to %v", SuperAdmin.SuperAdminEmail)
-		utils.SendLoginCredentials(SuperAdmin.SuperAdminEmail, password)
+		if err := utils.SendLoginCredentials(SuperAdmin.SuperAdminEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", SuperAdmin.SuperAdminEmail, err)
+		}
 		log.Printf("credentials sent to %v", SuperAdmin.SuperAdminEmail)
 	}()
 
@@ -124,39 +99,14 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 
 // should be completed
 func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
-	var tokenModel models.UserTokenModel
-
-	tokenString := e.Request().Header.Get("Authorization")
-	if tokenString == "" {
-		log.Printf("missgin token")
-		return http.StatusUnauthorized, fmt.Errorf("missing token")
-	}
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-
-	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
-	})
-
+	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
 	if err != nil {
-		log.Printf("invalid token: %v", err)
-		return http.StatusUnauthorized, fmt.Errorf("invalid token")
-	}
-
-	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
-		log.Printf("token expired or not of UserTokenModel")
-		return http.StatusUnauthorized, fmt.Errorf("invalid token")
-	}
-
-	if claims.UserType != "organisations" {
-		log.Printf("invalid userType, required userType %v given %v", "organisations", claims.UserType)
-		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
+		return status, err
 	}
 
 	query := database.NewDBinstance(or.db)
 
-	ok, err = query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details:", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

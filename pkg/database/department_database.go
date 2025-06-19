@@ -16,7 +16,7 @@ func (q *Query) CreateWorkspace(workspace models.CreateWorkspaceModel, departmen
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, -1, fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return http.StatusInternalServerError, -1, err
 	}
 
 	defer func() {
@@ -48,7 +48,7 @@ func (q *Query) DeleteWorkspace(workspace models.DeleteWorkspaceModel, departmen
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("something went wrong while processing your request. Please try again later")
+		return http.StatusInternalServerError, err
 	}
 
 	defer func() {
@@ -74,4 +74,50 @@ func (q *Query) DeleteWorkspace(workspace models.DeleteWorkspaceModel, departmen
 	}
 
 	return http.StatusNoContent, nil
+}
+
+func (q *Query) RaiseIssue(issue models.RaiseIssueModel) (int, int, error) {
+	query1 := fmt.Sprintf("SELECT workspace_id FROM %s_units_assigned WHERE unit_id = $1", issue.UnitPrefix)
+	query2 := `INSERT INTO issues (department_id, warehouse_id, workspace_id, unit_id, issue) VALUES($1, $2, $3, $4, $5) RETURNING id`
+	query3 := fmt.Sprintf("UPDATE %s_us_units SET status = repair WHERE id = $1")
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, -1, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	var issue_id int
+	var workspace_id int
+
+	if err := tx.QueryRow(query1, issue.UnitID).Scan(&workspace_id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching unit found :%v", err)
+			return http.StatusNotFound, -1, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, -1, err
+	}
+
+	if err := tx.QueryRow(query2, issue.DepartmentID, issue.WarehouseID, issue.WorkspaceID, issue.UnitID, issue.Issue).Scan(&issue_id); err != nil {
+		return http.StatusInternalServerError, -1, err
+	}
+
+	if _, err := tx.Exec(query3, issue.UnitID); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching unit found :%v", err)
+			return http.StatusNotFound, -1, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, -1, err
+	}
+
+	return http.StatusCreated, issue_id, nil
 }

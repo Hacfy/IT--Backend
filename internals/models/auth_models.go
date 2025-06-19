@@ -5,9 +5,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type LoginModel struct {
+type UserLoginModel struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
+}
+
+type UserLogoutModel struct {
+	Email string `json:"email" validate:"required,email"`
 }
 
 type UserTokenModel struct {
@@ -20,9 +24,18 @@ type UserTokenModel struct {
 
 type UserInterface interface {
 	UserLogin(echo.Context) (int, string, string, string, error)
+	ChangeUserPassword(e echo.Context) (int, string, string, string, error)
+	UserLogout(e echo.Context) (int, error)
 }
 
 type ChangePasswordModel struct {
 	OldPassword string `json:"old_password" validate:"required"`
 	NewPassword string `json:"new_password" validate:"required"`
+}
+
+type CookieModel struct {
+	UserID    int    `json:"user_id"`
+	UserEmail string `json:"user_email" validate:"required,email"`
+	UserType  string `json:"user_type"`
+	jwt.RegisteredClaims
 }

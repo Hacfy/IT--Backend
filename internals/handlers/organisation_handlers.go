@@ -18,9 +18,7 @@ func NewOrganisationHandler(organisaion models.OrganisationInterface) *Organisat
 func (oh *OrganisationHandler) CreateSuperAdminHandler(e echo.Context) error {
 	status, err := oh.OrgRepo.CreateSuperAdmin(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
 	}
 	return e.JSON(status, echo.Map{
 		"message": "successfull",
@@ -30,9 +28,7 @@ func (oh *OrganisationHandler) CreateSuperAdminHandler(e echo.Context) error {
 func (oh *OrganisationHandler) DeleteSuperAdminHandler(e echo.Context) error {
 	status, err := oh.OrgRepo.DeleteSuperAdmin(e)
 	if err != nil {
-		return e.JSON(status, echo.Map{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(status, err.Error())
 	}
 
 	return e.JSON(status, echo.Map{

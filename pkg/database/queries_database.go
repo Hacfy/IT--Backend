@@ -31,7 +31,28 @@ func (db *Query) InitialiseDBqueries() error {
 					'super_admins', 
 					'branch_heads', 
 					'department_heads'
-					'workspace_heads'
+					'warehouses'
+				);
+			END IF;
+		END $$;`,
+		`DO $$ 
+		BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'unit_status') THEN
+				CREATE TYPE unit_status AS ENUM (
+					'working',
+					'repair',
+					'not_working',
+					'exit'
+				);
+			END IF;
+		END $$;`,
+		`DO $$ 
+		BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'issue_status') THEN
+				CREATE TYPE issue_status AS ENUM (
+					'raised',
+					'accepted',
+					'resolved'
 				);
 			END IF;
 		END $$;`,
@@ -39,7 +60,8 @@ func (db *Query) InitialiseDBqueries() error {
 			user_email VARCHAR(50) PRIMARY KEY,
 			user_level userLevel NOT NULL,
 			ever_logged_in BOOLEAN NOT NULL DEFAULT FALSE,
-			latest_token TIMESTAMPTZ
+			latest_token TIMESTAMPTZ,
+			created_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
 		`CREATE TABLE IF NOT EXISTS organisations (
 			id SERIAL PRIMARY KEY,
@@ -65,7 +87,7 @@ func (db *Query) InitialiseDBqueries() error {
 			org_id INTEGER NOT NULL,
 			super_admin_id INTEGER NOT NULL,
 			branch_name VARCHAR(50) NOT NULL,
-			branch_location VARCHAR(100) NOT NULL,
+			branch_location VARCHAR(500) NOT NULL,
 			CONSTRAINT fk_branch_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON DELETE CASCADE,
 			CONSTRAINT fk_branch_super_admin_id FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON DELETE CASCADE
 		)`,
@@ -145,12 +167,12 @@ func (db *Query) InitialiseDBqueries() error {
 			email VARCHAR(50) NOT NULL,
 			deleted_by INTEGER NOT NULL
 		)`,
-		`CREATE TABLE IF NOT EXISTS workespaces (
+		`CREATE TABLE IF NOT EXISTS workspaces (
 			id SERIAL PRIMARY KEY,
 			department_id INTEGER NOT NULL,
 			workspace_name VARCHAR(50) NOT NULL
 		)`,
-		`CREATE TABLE IF NOT EXISTS deleted_workspaces (
+		`CREATE TABLE IF NOT EXISTS deleted_workpaces (
 			id SERIAL PRIMARY KEY,
 			workspace_id INTEGER NOT NULL,
 			department_id INTEGER NOT NULL,
@@ -163,6 +185,37 @@ func (db *Query) InitialiseDBqueries() error {
 			warehouse_id INTEGER NOT NULL,
 			a_at TIMESTAMPTZ DEFAULT NOW(),
 			CONSTRAINT fk_component_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS deleted_components (
+			id SERIAL PRIMARY KEY,
+			component_id INTEGER NOT NULL,
+			component_name VARCHAR(30) NOT NULL,
+			prefix VARCHAR(3) NOT NULL,
+			deleted_by INTEGER NOT NULL
+		)`,
+		`CREATE TABLE IF NOT EXISTS issues (
+			id SERIAL PRIMARY KEY,
+			department_id INTEGER NOT NULL,
+			warehouse_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
+			unit_id INTEGER NOT NULL,
+			unit_prefix VARCHAR(3) NOT NULL,
+			issue VARCHAR(100) NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			status issue_status DEFAULT 'raised',
+			CONSTRAINT fk_issues_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE,
+			CONSTRAINT fk_issues_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE CASCADE,
+			CONSTRAINT fk_issues_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+		)`,
+		`CREATE TABLE IF NOT EXISTS resolved_issues (
+			id SERIAL PRIMARY KEY,
+			issue_id INTEGER NOT NULL,
+			solution VARCHAR(250) NOT NULL,
+			cost NUMERIC(10, 2) NOT NULL,
+			resolved_by INTEGER NOT NULL,
+			resolved_at TIMESTAMPTZ DEFAULT NOW(),
+			CONSTRAINT fk_resolved_issues_issue_id FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
+			CONSTRAINT fk_resolved_issues_resolved_by FOREIGN KEY (resolved_by) REFERENCES warehouses(id) ON DELETE CASCADE
 		)`,
 	}
 
