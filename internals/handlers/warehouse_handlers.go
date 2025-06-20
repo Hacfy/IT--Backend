@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"math"
+
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
 	"github.com/labstack/echo/v4"
 )
@@ -57,5 +59,22 @@ func (wh *WarehouseHandler) AssignUnitsHandler(e echo.Context) error {
 
 	return e.JSON(status, echo.Map{
 		"message": "successfull",
+	})
+}
+
+func (wh *WarehouseHandler) GetAllIssuesHandler(e echo.Context) error {
+	status, issues, total, page, limit, err := wh.WarehouseRepo.GetAllIssues(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"issues": issues,
+		"meta": echo.Map{
+			"total": total,
+			"page":  page,
+			"limit": limit,
+			"pages": int(math.Ceil(float64(total) / float64(limit))),
+		},
 	})
 }

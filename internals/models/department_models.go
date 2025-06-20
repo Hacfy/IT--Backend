@@ -34,12 +34,3 @@ type GetAllDepartmentsModel struct {
 	NoOfWorkspaces     int    `json:"no_of_workspaces" validate:"required"`
 	Issues             int    `json:"issues" validate:"required"`
 }
-
-type RaiseIssueModel struct {
-	DepartmentID int    `json:"department_id" validate:"required"`
-	WarehouseID  int    `json:"warehouse_id" validate:"required"`
-	WorkspaceID  int    `json:"workspace_id" validate:"required"`
-	UnitID       int    `json:"unit_id" validate:"required"`
-	UnitPrefix   string `json:"unit_prefix" validate:"required"`
-	Issue        string `json:"issue" validate:"required"`
-}

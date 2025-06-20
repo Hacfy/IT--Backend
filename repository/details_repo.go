@@ -48,20 +48,20 @@ package repository
 // 	search := e.QueryParam("search")
 // 	role := e.Get("userType").(string)
 
-// 	// whereClause := ""
-// 	// args := []interface{}{limit, offset}
-// 	// argIndex := 3
-// 	// if role == "admin" {
-// 	// 	whereClause = "WHERE role = 'user'"
-// 	// } else if role == "superAdmin" {
-// 	// 	whereClause = "WHERE role IN ('admin', 'user')"
-// 	// } else {
-// 	// 	return []models.GetAllDepartmentsModel{}, http.StatusForbidden, fmt.Errorf("invalid creadentials")
-// 	// }
-// 	// if search != "" {
-// 	// 	whereClause += fmt.Sprintf(" AND (name ILIKE $%d OR email ILIKE $%d)", argIndex, argIndex)
-// 	// 	args = append(args, "%"+search+"%")
-// 	// }
+// 	whereClause := ""
+// 	args := []interface{}{limit, offset}
+// 	argIndex := 3
+// 	if role == "admin" {
+// 		whereClause = "WHERE role = 'user'"
+// 	} else if role == "superAdmin" {
+// 		whereClause = "WHERE role IN ('admin', 'user')"
+// 	} else {
+// 		return []models.GetAllDepartmentsModel{}, http.StatusForbidden, fmt.Errorf("invalid creadentials")
+// 	}
+// 	if search != "" {
+// 		whereClause += fmt.Sprintf(" AND (name ILIKE $%d OR email ILIKE $%d)", argIndex, argIndex)
+// 		args = append(args, "%"+search+"%")
+// 	}
 
 // 	query := database.NewDBinstance(dr.db)
 

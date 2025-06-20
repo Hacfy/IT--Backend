@@ -116,7 +116,7 @@ func (dr *DepartmentRepo) RaiseIssue(e echo.Context) (int, int, error) {
 		return http.StatusUnauthorized, -1, fmt.Errorf("invalid user details")
 	}
 
-	var Issue models.RaiseIssueModel
+	var Issue models.IssueModel
 
 	if err := e.Bind(&Issue); err != nil {
 		log.Printf("failed to decode request: %v", err)

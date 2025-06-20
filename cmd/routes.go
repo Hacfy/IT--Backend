@@ -63,6 +63,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.DELETE("/warehouse/delete/component", warehouseHandler.DeleteComponentHandler)
 	e.POST("/warehouse/add/component/units", warehouseHandler.AddComponentUnitsHandler)
 	e.POST("/warehouse/assign/units", warehouseHandler.AssignUnitsHandler)
+	e.GET("/warehouse/get/all/issues", warehouseHandler.GetAllIssuesHandler)
 
 	return e
 }

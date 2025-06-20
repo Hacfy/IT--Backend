@@ -1,6 +1,8 @@
 package models
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+)
 
 type WarehouseModel struct {
 	WarehouseID        int    `json:"warehouse_id"`
@@ -26,6 +28,7 @@ type WarehouseInterface interface {
 	DeleteComponent(echo.Context) (int, error)
 	AddComponentUnits(echo.Context) (int, error)
 	AssignUnits(echo.Context) (int, error)
+	GetAllIssues(echo.Context) (int, []IssueModel, int, int, int, error)
 }
 
 type GetAllIssuesModel struct {

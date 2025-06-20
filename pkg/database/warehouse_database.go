@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
@@ -190,4 +191,77 @@ func (q *Query) AssignUnitWorkspace(workspace_id int, unit_id []int, prefix stri
 
 }
 
-// func (q *Query) GetAllIssues(warehouseID int)
+func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.IssueModel, int, error) {
+	var issues []models.IssueModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	args := []interface{}{sort.Limit, sort.Offset}
+	argIndex := 3
+	whereClause := fmt.Sprintf("WHERE workspace_id = %d ", id)
+
+	if sort.Search != "" {
+		id, err := strconv.Atoi(sort.Search)
+		if err == nil {
+			whereClause += fmt.Sprint("AND (id = $%d OR department_id = $%d OR workspace_id = $%d OR unit_id = $%d OR created_at = $%d) ", argIndex, argIndex, argIndex, argIndex, argIndex)
+			args = append(args, id)
+		} else {
+			whereClause += fmt.Sprintf("AND (unit_prefix ILIKE $%d OR issue ILIKE $%d OR status ILIKE $%d) ", argIndex, argIndex, argIndex)
+			args = append(args, "%"+sort.Search+"%")
+		}
+	}
+
+	query := fmt.Sprintf(`SELECT id, department_id, workspace_id, unit_id, unit_prefix, issue, created_at, status FROM issues
+							%s
+							ORDER BY %s %s 
+							LIMIT $1 OFFSET $2
+							`, whereClause, sort.SortBy, sort.Order)
+
+	rows, err := tx.Query(query, args...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found : %v", err)
+			return http.StatusNotFound, []models.IssueModel{}, 0, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var issue models.IssueModel
+		if err := rows.Scan(&issue.IssueID, &issue.DepartmentID, &issue.WorkspaceID, &issue.UnitID, &issue.UnitPrefix, &issue.Issue, &issue.Created_at, &issue.Status); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error occured while retrieving data")
+		}
+		issues = append(issues, issue)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("row iteration error: %v", err)
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error during row iteration")
+	}
+
+	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM issues %s`, whereClause)
+	var total int
+	if err := tx.QueryRow(countQuery).Scan(&total); err != nil {
+		log.Printf("error while scanning data: %v", err)
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error occured while retrieving data")
+	}
+
+	return http.StatusOK, issues, total, nil
+
+}

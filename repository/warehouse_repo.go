@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -283,5 +284,66 @@ func (wr *WarehouseRepo) AssignUnits(e echo.Context) (int, error) {
 	}
 
 	return http.StatusCreated, nil
+
+}
+
+func (wr *WarehouseRepo) GetAllIssues(e echo.Context) (int, []models.IssueModel, int, int, int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, []models.IssueModel{}, 0, 0, 0, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details:", err)
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, 0, 0, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.IssueModel{}, 0, 0, 0, fmt.Errorf("invalid user details")
+	}
+
+	var Sort models.SortModel
+
+	Sort.Limit, err = strconv.Atoi(e.QueryParam("limit"))
+	if err != nil {
+		return http.StatusBadRequest, []models.IssueModel{}, 0, 0, 0, fmt.Errorf("invalid request format")
+	}
+
+	if Sort.Limit <= 0 || Sort.Limit > 100 {
+		Sort.Limit = 10
+	}
+
+	Sort.Page, err = strconv.Atoi(e.QueryParam("page"))
+	if Sort.Page <= 0 {
+		Sort.Page = 1
+	}
+	Sort.Offset = (Sort.Page - 1) * Sort.Limit
+
+	Sort.Order = e.QueryParam("order")
+	if Sort.Order != "asc" && Sort.Order != "desc" {
+		Sort.Order = "asc"
+	}
+
+	Sort.SortBy = e.QueryParam("sortBy")
+	if Sort.SortBy == "" {
+		Sort.SortBy = "created_at"
+	}
+
+	allowed := map[string]bool{"name": true, "created_at": true}
+	if !allowed[Sort.SortBy] {
+		Sort.SortBy = "created_at"
+	}
+
+	Sort.Search = e.QueryParam("search")
+
+	status, issues, total, err := query.GetAllIssues(claims.UserID, Sort)
+	if err != nil {
+		log.Printf("Error while fetching issues: %v", err)
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, 0, 0, fmt.Errorf("database error")
+	}
+
+	return status, issues, total, Sort.Page, Sort.Limit, nil
 
 }
