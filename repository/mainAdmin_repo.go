@@ -86,7 +86,7 @@ func (ma *MainAdminRepo) CreateMainAdmin(e echo.Context) (int, error) {
 	go func() {
 		log.Printf("sending login credentials to %v", main_admin.MainAdminEmail)
 		if err := utils.SendLoginCredentials(main_admin.MainAdminEmail, password); err != nil {
-			log.Fatal("error while sending credentials to %v: %v", main_admin.MainAdminEmail, err)
+			log.Fatalf("error while sending credentials to %v: %v", main_admin.MainAdminEmail, err)
 		}
 		log.Printf("credentials sent to %v", main_admin.MainAdminEmail)
 	}()
@@ -111,7 +111,7 @@ func (ma *MainAdminRepo) LoginMainAdmin(e echo.Context) (int, string, string, st
 
 	db_ma, ok, err := query.GetMainAdminCredentials(login_ma.MainAdminEmail)
 	if err != nil {
-		log.Printf("Error checking main admin details:", err)
+		log.Printf("Error checking main admin details: %v", err)
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid main admin details")
@@ -172,7 +172,7 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 	}
 
 	claims, ok := token.Claims.(*models.MainAdminTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of MainAdminTokenModel")
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
@@ -181,7 +181,7 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 
 	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
 	if err != nil {
-		log.Printf("Error checking main admin details:", err)
+		log.Printf("Error checking main admin details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid main admin details")
@@ -278,7 +278,7 @@ func (ma *MainAdminRepo) DeleteMainAdmin(e echo.Context) (int, error) {
 	}
 
 	claims, ok := token.Claims.(*models.MainAdminTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of MainAdminTokenModel")
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
@@ -287,7 +287,7 @@ func (ma *MainAdminRepo) DeleteMainAdmin(e echo.Context) (int, error) {
 
 	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
 	if err != nil {
-		log.Printf("Error checking main admin details:", err)
+		log.Printf("Error checking main admin details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid main admin details")
@@ -344,7 +344,7 @@ func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
 	}
 
 	claims, ok := token.Claims.(*models.MainAdminTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of MainAdminTokenModel")
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
@@ -353,7 +353,7 @@ func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
 
 	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
 	if err != nil {
-		log.Printf("Error checking main admin details:", err)
+		log.Printf("Error checking main admin details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid main admin details")
@@ -386,4 +386,119 @@ func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
 	}
 
 	return status, nil
+}
+
+func (ma *MainAdminRepo) GetAllOrganisations(e echo.Context) (int, []models.GetAllOrganisationsModel, error) {
+	var tokenModel models.MainAdminTokenModel
+
+	tokenString := e.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		log.Printf("missgin token")
+		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("missing token")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Printf("invalid token: %v", err)
+		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("invalid token")
+	}
+
+	claims, ok := token.Claims.(*models.MainAdminTokenModel)
+	if !(ok && token.Valid) {
+		log.Printf("token expired or not of MainAdminTokenModel")
+		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("invalid token")
+	}
+
+	query := database.NewDBinstance(ma.db)
+
+	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
+	if err != nil {
+		log.Printf("Error checking main admin details: %v", err)
+		return http.StatusInternalServerError, []models.GetAllOrganisationsModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid main admin details")
+		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("invalid main admin details")
+	}
+
+	orgs, err := query.GetAllOrganisations(claims.MainAdminID)
+	if err != nil {
+		log.Println("Error while getting organisations:", err)
+		return http.StatusInternalServerError, []models.GetAllOrganisationsModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, orgs, nil
+
+}
+
+func (ma *MainAdminRepo) GetAllMainAdmins(e echo.Context) (int, []models.AllMainAdminModel, error) {
+	var tokenModel models.MainAdminTokenModel
+
+	tokenString := e.Request().Header.Get("Authorization")
+	if tokenString == "" {
+		log.Printf("missgin token")
+		return http.StatusUnauthorized, []models.AllMainAdminModel{}, fmt.Errorf("missing token")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Printf("invalid token: %v", err)
+		return http.StatusUnauthorized, []models.AllMainAdminModel{}, fmt.Errorf("invalid token")
+	}
+
+	claims, ok := token.Claims.(*models.MainAdminTokenModel)
+	if !(ok && token.Valid) {
+		log.Printf("token expired or not of MainAdminTokenModel")
+		return http.StatusUnauthorized, []models.AllMainAdminModel{}, fmt.Errorf("invalid token")
+	}
+
+	query := database.NewDBinstance(ma.db)
+
+	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
+	if err != nil {
+		log.Printf("Error checking main admin details: %v", err)
+		return http.StatusInternalServerError, []models.AllMainAdminModel{}, fmt.Errorf("database error")
+	}
+
+	if !ok {
+		log.Printf("Invalid main admin details")
+		return http.StatusUnauthorized, []models.AllMainAdminModel{}, fmt.Errorf("invalid main admin details")
+	}
+
+	var deleteRequest models.GetAllMainAdminModel
+
+	err = e.Bind(&deleteRequest)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, []models.AllMainAdminModel{}, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(deleteRequest); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, []models.AllMainAdminModel{}, fmt.Errorf("failded to validate request")
+	}
+
+	companyPassword := os.Getenv("COMPANY_PASSWORD")
+
+	if deleteRequest.CompanyPassword != companyPassword {
+		log.Printf("wrong company_password")
+		return http.StatusUnauthorized, []models.AllMainAdminModel{}, fmt.Errorf("invalid credentials")
+	}
+
+	main_admins, err := query.GetAllMainAdmins()
+	if err != nil {
+		log.Println("Error while getting main admins:", err)
+		return http.StatusInternalServerError, []models.AllMainAdminModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, main_admins, nil
 }

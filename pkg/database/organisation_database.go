@@ -74,3 +74,24 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
 
 	return nil
 }
+
+//query to get all the branches of a perticular organisation
+// SELECT
+//     d.department_id,
+//     d.department_name,
+//     COALESCE(dh.name, '') AS department_head_name,
+//     COUNT(DISTINCT w.id) AS no_of_workspaces,
+//     COUNT(DISTINCT i.id) AS issues
+// FROM
+//     departments d
+// JOIN branches b ON d.branch_id = b.branch_id
+// JOIN organisations o ON b.org_id = o.id
+// LEFT JOIN department_heads dh ON d.department_id = dh.department_id
+// LEFT JOIN workspaces w ON d.department_id = w.department_id
+// LEFT JOIN issues i ON d.department_id = i.department_id
+// WHERE
+//     o.id = $1
+// GROUP BY
+//     d.department_id, d.department_name, dh.name
+// ORDER BY
+//     d.department_id;

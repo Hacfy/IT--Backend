@@ -11,6 +11,9 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
+// ("5-M", 1*time.Minute)
+// ("10-S", 2*time.Minute)
+
 var blocked = struct {
 	m map[string]time.Time
 	sync.Mutex

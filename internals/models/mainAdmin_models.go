@@ -36,10 +36,18 @@ type MainAdminInterface interface {
 	LoginMainAdmin(echo.Context) (int, string, string, string, error)
 	DeleteMainAdmin(echo.Context) (int, error)
 	DeleteOrganisation(echo.Context) (int, error)
+	GetAllOrganisations(echo.Context) (int, []GetAllOrganisationsModel, error)
+	GetAllMainAdmins(echo.Context) (int, []AllMainAdminModel, error)
 }
 
 type MainAdminTokenModel struct {
 	MainAdminID    int    `json:"main_admin_id"`
 	MainAdminEmail string `json:"main_admin_email"`
 	jwt.RegisteredClaims
+}
+
+type AllMainAdminModel struct {
+	MainAdminID    int    `json:"main_admin_id"`
+	MainAdminEmail string `json:"main_admin_email"`
+	NoOfOrgs       int    `json:"no_of_orgs"`
 }

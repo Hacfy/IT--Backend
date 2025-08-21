@@ -46,7 +46,7 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 	}
 
 	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
@@ -60,7 +60,7 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 
 	ok, err = query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -127,7 +127,7 @@ func (sa *SuperAdminRepo) DeleteBranch(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -177,7 +177,7 @@ func (sa *SuperAdminRepo) UpdateBranchHead(e echo.Context) (int, error) {
 	}
 
 	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
@@ -191,7 +191,7 @@ func (sa *SuperAdminRepo) UpdateBranchHead(e echo.Context) (int, error) {
 
 	ok, err = query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")

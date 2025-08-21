@@ -17,7 +17,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Set user ID and role for later use
 		c.Set("userID", claims.UserID)
 		c.Set("userType", claims.UserType)
-
+		c.Set("userEmail", claims.UserEmail)
 		return next(c)
 	}
 }

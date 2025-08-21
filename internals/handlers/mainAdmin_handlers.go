@@ -89,3 +89,29 @@ func (ma *MainAdminHandler) DeleteOrganisationHandler(e echo.Context) error {
 		"message": "successfull",
 	})
 }
+
+func (ma *MainAdminHandler) GetAllOrganisationsHandler(e echo.Context) error {
+	status, orgs, err := ma.MainAdminRepo.GetAllOrganisations(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message":             "successfull",
+		"organisations":       orgs,
+		"no_of_organisations": len(orgs),
+	})
+}
+
+func (ma *MainAdminHandler) GetAllMainAdminsHandler(e echo.Context) error {
+	status, main_admins, err := ma.MainAdminRepo.GetAllMainAdmins(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message":           "successfull",
+		"main_admins":       main_admins,
+		"no_of_main_admins": len(main_admins),
+	})
+}

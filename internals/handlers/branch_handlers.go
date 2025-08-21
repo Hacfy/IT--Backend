@@ -56,3 +56,23 @@ func (bh *BranchHandler) UpdateWarehouseHeadHandler(e echo.Context) error {
 		"message": "successfull",
 	})
 }
+
+func (bh *BranchHandler) DeleteDepartmentHandler(e echo.Context) error {
+	status, err := bh.BranchRepo.DeleteDepartment(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (bh *BranchHandler) DeleteWarehouseHandler(e echo.Context) error {
+	status, err := bh.BranchRepo.DeleteWarehouse(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}

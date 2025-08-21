@@ -37,15 +37,25 @@ type UpdateBranchHeadModel struct {
 	NewBranchHeadEmail string `json:"new_branch_head_email" validate:"required,email"`
 }
 
+type GetAllBranchesModel struct {
+	SuperAdminID int `json:"super_admin_id" validate:"required"`
+}
+
+// type AllBranchDepartmentsModel struct {
+// 	BranchID           int    `json:"branch_id" validate:"required"`
+// 	BranchName         string `json:"branch_name" validate:"required"`
+// 	DepartmentName     string `json:"department_name" validate:"required"`
+// 	DepartmentID       int    `json:"department_id" validate:"required"`
+// 	DepartmentHeadName string `json:"department_head_name" validate:"required"`
+// 	NoOfWorkspaces     int    `json:"no_of_workspaces" validate:"required"`
+// 	Issues             int    `json:"issues" validate:"required"`
+// }
+
 type BranchInterface interface {
 	CreateDepartment(echo.Context) (int, error)
 	UpdateDepartmentHead(echo.Context) (int, error)
 	CreateWarehouse(echo.Context) (int, error)
 	UpdateWarehouseHead(echo.Context) (int, error)
-}
-
-type GetAllBranchesModel struct {
-	BranchName     string `json:"branch_name" validate:"required"`
-	BranchID       int    `json:"branch_id" validate:"required"`
-	BranchLocation string `json:"branch_location" validate:"required"`
+	DeleteDepartment(echo.Context) (int, error)
+	DeleteWarehouse(echo.Context) (int, error)
 }

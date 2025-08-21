@@ -13,3 +13,13 @@ type IssueModel struct {
 	Created_at   time.Time `json:"created_at"`
 	Status       string    `json:"status"`
 }
+
+type DepartmentIssuesModel struct {
+	IssueID     int    `json:"issue_id"`
+	Issue       string `json:"issue"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
+	UnitID      int    `json:"unit_id"`
+	UnitPrefix  string `json:"unit_prefix"`
+	WorkspaceID int    `json:"workspace_id"`
+}

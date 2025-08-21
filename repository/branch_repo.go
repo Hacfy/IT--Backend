@@ -33,7 +33,7 @@ func (br *BranchRepo) CreateDepartment(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -99,7 +99,7 @@ func (br *BranchRepo) CreateWarehouse(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -166,7 +166,7 @@ func (br *BranchRepo) UpdateDepartmentHead(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -232,7 +232,7 @@ func (br *BranchRepo) UpdateWarehouseHead(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -285,4 +285,122 @@ func (br *BranchRepo) UpdateWarehouseHead(e echo.Context) (int, error) {
 	}()
 
 	return http.StatusOK, nil
+}
+
+func (br *BranchRepo) DeleteDepartment(e echo.Context) (int, error) {
+
+	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(br.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var department models.DeleteDepartmentModel
+
+	if err := e.Bind(&department); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(department); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	ok, err = query.IsDepartmentUnderBranchHead(department.DepartmentID, claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	status, err = query.DeleteDepartment(department.DepartmentID, claims.UserID)
+	if err != nil {
+		log.Printf("error while deleting the department %v: %v", department.DepartmentID, err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return status, nil
+}
+
+func (br *BranchRepo) DeleteWarehouse(e echo.Context) (int, error) {
+
+	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(br.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var warehouse models.DeleteWarehouseModel
+
+	if err := e.Bind(&warehouse); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(warehouse); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	ok, err = query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	UserPassword, _, _, ok, err := query.GetUserPasswordID(claims.UserEmail, claims.UserType)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	if err := utils.CheckPassword(warehouse.BranchHeadPassword, UserPassword); err != nil {
+		log.Printf("wrong password %v: %v", warehouse.BranchHeadPassword, err)
+		return http.StatusBadRequest, fmt.Errorf("invalid user details")
+	}
+	ok, err = query.IsWarehouseUnderBranchHead(warehouse.WarehouseID, claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	status, err = query.DeleteWarehouse(warehouse.WarehouseID, claims.UserID)
+	if err != nil {
+		log.Printf("error while deleting the warehouse %v: %v", warehouse.WarehouseID, err)
+		return status, fmt.Errorf("database error")
+	}
+
+	return status, nil
 }

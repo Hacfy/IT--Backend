@@ -184,3 +184,25 @@ func (q *Query) UpdateWarehouseHead(warehouse_head models.UpdateWarehouseHeadMod
 
 	return http.StatusOK, nil
 }
+
+func (q *Query) DeleteDepartment(department_id, deleted_by int) (int, error) {
+	query := "CALL delete_department($1, $2);"
+
+	_, err := q.db.Exec(query, department_id, deleted_by)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}
+
+func (q *Query) DeleteWarehouse(warehouse_id, deleted_by int) (int, error) {
+	query := "CALL delete_warehouse($1, $2);"
+
+	_, err := q.db.Exec(query, warehouse_id, deleted_by)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}

@@ -63,7 +63,7 @@ func (wh *WarehouseHandler) AssignUnitsHandler(e echo.Context) error {
 }
 
 func (wh *WarehouseHandler) GetAllIssuesHandler(e echo.Context) error {
-	status, issues, total, page, limit, err := wh.WarehouseRepo.GetAllIssues(e)
+	status, issues, total, page, limit, err := wh.WarehouseRepo.GetAllWarehouseIssues(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
 	}

@@ -99,3 +99,48 @@ func (q *Query) DeleteOrganisation(organisationEmail string) (int, error) {
 	}
 	return http.StatusNoContent, nil
 }
+
+func (q *Query) GetAllOrganisations(mainAdminID int) ([]models.GetAllOrganisationsModel, error) {
+	var orgs []models.GetAllOrganisationsModel
+	query := "SELECT id, name, email, phone_number FROM organisations WHERE main_admin_id = $1"
+
+	rows, err := q.db.Query(query, mainAdminID)
+	if err != nil {
+		return []models.GetAllOrganisationsModel{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var org models.GetAllOrganisationsModel
+		err := rows.Scan(&org.OrganisationID, &org.OrganisationName, &org.OrganisationEmail, &org.OrganisationPhoneNumber)
+		if err != nil {
+			return []models.GetAllOrganisationsModel{}, err
+		}
+		orgs = append(orgs, org)
+	}
+
+	return orgs, nil
+}
+
+func (q *Query) GetAllMainAdmins() ([]models.AllMainAdminModel, error) {
+	var main_admins []models.AllMainAdminModel
+
+	query := "SELECT main_admin_id, main_admin_email, COUNT(organisation_id) AS no_of_orgs FROM main_admin JOIN organisations ON main_admin_id = main_admin_id"
+
+	rows, err := q.db.Query(query)
+	if err != nil {
+		return []models.AllMainAdminModel{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var main_admin models.AllMainAdminModel
+		err := rows.Scan(&main_admin.MainAdminID, &main_admin.MainAdminEmail, &main_admin.NoOfOrgs)
+		if err != nil {
+			return []models.AllMainAdminModel{}, err
+		}
+		main_admins = append(main_admins, main_admin)
+	}
+
+	return main_admins, nil
+}

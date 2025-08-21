@@ -56,7 +56,7 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 		CONSTRAINT fk_%s_units_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
 		CONSTRAINT fk_%s_units_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
 		CONSTRAINT fk_%s_units_id FOREIGN KEY (id) REFERENCES %s_units(id) ON DELETE CASCADE
-	)`, prefix, prefix, prefix, prefix)
+	)`, prefix, prefix, prefix, prefix, prefix)
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -89,35 +89,14 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 }
 
 func (q *Query) DeleteComponent(del_component models.DeleteComponentModel, warehouse_id int) (int, error) {
-	query1 := "DELETE FROM components WHERE id = $1 RETURNING id"
-	query2 := "INSERT INTO deleted_components(component_id, warehouse_id, component_name, prefix, deleted_by) VALUES($1, $2, $3, $4)"
+	query1 := "CALL delete_component($1, $2)"
 
-	tx, err := q.db.Begin()
-	if err != nil {
-		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
-			log.Println("Initialised Database")
-		}
-	}()
-
-	if _, err := tx.Exec(query1, del_component.ComponentID); err != nil {
+	if _, err := q.db.Exec(query1, del_component.ComponentID, warehouse_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
-
-	if _, err := tx.Exec(query2, del_component.ComponentID, del_component.ComponentName, del_component.Prefix, warehouse_id); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
 	return http.StatusNoContent, nil
 }
 
@@ -139,7 +118,7 @@ func (q *Query) CreateComponentUnit(warranty_date time.Time, cost float32, prifi
 		}
 	}()
 
-	for _ = range number {
+	for range number {
 		_, err := tx.Exec(query1, component_id, warehouse_id, warranty_date, cost)
 		if err != nil {
 			return http.StatusInternalServerError, err
@@ -216,7 +195,7 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 	if sort.Search != "" {
 		id, err := strconv.Atoi(sort.Search)
 		if err == nil {
-			whereClause += fmt.Sprint("AND (id = $%d OR department_id = $%d OR workspace_id = $%d OR unit_id = $%d OR created_at = $%d) ", argIndex, argIndex, argIndex, argIndex, argIndex)
+			whereClause += fmt.Sprintf("AND (id = $%d OR department_id = $%d OR workspace_id = $%d OR unit_id = $%d OR created_at = $%d) ", argIndex, argIndex, argIndex, argIndex, argIndex)
 			args = append(args, id)
 		} else {
 			whereClause += fmt.Sprintf("AND (unit_prefix ILIKE $%d OR issue ILIKE $%d OR status ILIKE $%d) ", argIndex, argIndex, argIndex)
@@ -252,7 +231,7 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 
 	if err := rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
-		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error during row iteration")
+		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("internal server error, please try again later")
 	}
 
 	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM issues %s`, whereClause)

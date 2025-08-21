@@ -23,12 +23,17 @@ type UpdateWarehouseHeadModel struct {
 	NewWarehouseHeadEmail string `json:"new_warehouse_head_email" validate:"required,email"`
 }
 
+type DeleteWarehouseModel struct {
+	WarehouseID        int    `json:"warehouse_id" validate:"required"`
+	BranchHeadPassword string `json:"branch_head_password" validate:"required"`
+}
+
 type WarehouseInterface interface {
 	CreateComponent(echo.Context) (int, string, error)
 	DeleteComponent(echo.Context) (int, error)
 	AddComponentUnits(echo.Context) (int, error)
 	AssignUnits(echo.Context) (int, error)
-	GetAllIssues(echo.Context) (int, []IssueModel, int, int, int, error)
+	GetAllWarehouseIssues(echo.Context) (int, []IssueModel, int, int, int, error)
 }
 
 type GetAllIssuesModel struct {

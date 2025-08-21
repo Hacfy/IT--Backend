@@ -42,7 +42,7 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 
 	userType, ok, err := query.GetUserType(req_user.Email)
 	if err != nil {
-		log.Printf("Error checking user type:", err)
+		log.Printf("Error checking user type: %v", err)
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user type")
@@ -60,7 +60,7 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 
 	db_password, db_name, db_id, ok, err := query.GetUserPasswordID(req_user.Email, userType)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -125,7 +125,7 @@ func (ar *AuthRepo) ChangeUserPassword(e echo.Context) (int, string, string, str
 	}
 
 	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid token")
 	}
@@ -224,7 +224,7 @@ func (ar *AuthRepo) UserLogout(e echo.Context) (int, error) {
 	}
 
 	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
@@ -263,7 +263,7 @@ func (ar *AuthRepo) UserLogout(e echo.Context) (int, error) {
 		if !ok {
 			return http.StatusUnauthorized, fmt.Errorf("invalid user details")
 		}
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 

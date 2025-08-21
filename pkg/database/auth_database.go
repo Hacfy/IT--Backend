@@ -75,7 +75,7 @@ func (q *Query) VerifyUser(userEmail, userType string, userID int) (bool, error)
 
 func (q *Query) GetLatestTokenTime(userEmail, userType string) (time.Time, error) {
 	var latestToken time.Time
-	query := fmt.Sprintf("SELECT latest_token FROM users WHERE user_email = $1 AND user_level = $2", userEmail, userType)
+	query := "SELECT latest_token FROM users WHERE user_email = $1 AND user_level = $2"
 	if err := q.db.QueryRow(query, userEmail, userType).Scan(&latestToken); err != nil {
 		if err == sql.ErrNoRows {
 			return time.Time{}, nil

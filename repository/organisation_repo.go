@@ -33,7 +33,7 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
@@ -108,7 +108,7 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 
 	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
 	if err != nil {
-		log.Printf("Error checking user details:", err)
+		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")

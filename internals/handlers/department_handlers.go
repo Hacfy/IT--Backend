@@ -46,3 +46,15 @@ func (dh *DepartmentHandler) RaiseIssueHandler(e echo.Context) error {
 		"issueID": issueID,
 	})
 }
+
+func (dh *DepartmentHandler) RequestNewUnitsHandler(e echo.Context) error {
+	status, requestIDs, err := dh.DepartmentRepo.RequestNewUnits(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+	return e.JSON(status, echo.Map{
+		"message":      "successfull",
+		"requestIDs":   requestIDs,
+		"totalRequest": len(requestIDs),
+	})
+}

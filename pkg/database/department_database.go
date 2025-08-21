@@ -79,7 +79,7 @@ func (q *Query) DeleteWorkspace(workspace models.DeleteWorkspaceModel, departmen
 func (q *Query) RaiseIssue(issue models.IssueModel) (int, int, error) {
 	query1 := fmt.Sprintf("SELECT workspace_id FROM %s_units_assigned WHERE unit_id = $1", issue.UnitPrefix)
 	query2 := `INSERT INTO issues (department_id, warehouse_id, workspace_id, unit_id, issue) VALUES($1, $2, $3, $4, $5) RETURNING id`
-	query3 := fmt.Sprintf("UPDATE %s_us_units SET status = repair WHERE id = $1")
+	query3 := fmt.Sprintf("UPDATE %s_us_units SET status = repair WHERE id = $1", issue.UnitPrefix)
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -120,4 +120,48 @@ func (q *Query) RaiseIssue(issue models.IssueModel) (int, int, error) {
 	}
 
 	return http.StatusCreated, issue_id, nil
+}
+
+func (q *Query) RequestNewUnits(department_id int, workspace_id int, warehouse_id int, component_id int, number_of_units int, prefix string, user_id int) (int, int, error) {
+	query1 := fmt.Sprintf("SELECT id FROM %s_units WHERE component_id = $1 AND warehouse_id = $2 AND id NOT IN (SELECT unit_id FROM %s_units_assigned )", prefix, prefix)
+	query2 := "INSERT INTO requests(department_id, workspace_id, warehouse_id, component_id, number_of_units, prefix, created_by) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, -1, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	var Request_id int
+	var num int
+
+	if err := tx.QueryRow(query1, component_id, warehouse_id).Scan(&num); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching unit found :%v", err)
+			return http.StatusNotFound, -1, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while getting number of units: %v", err)
+		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
+	}
+
+	if num < number_of_units {
+		log.Printf("not enough units available")
+		return http.StatusBadRequest, -1, fmt.Errorf("not enough units available")
+	}
+
+	if err := tx.QueryRow(query2, department_id, workspace_id, warehouse_id, component_id, number_of_units, prefix, user_id).Scan(&Request_id); err != nil {
+		log.Printf("error while requesting new units: %v", err)
+		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
+	}
+
+	return http.StatusCreated, Request_id, nil
 }
