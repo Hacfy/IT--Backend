@@ -34,6 +34,7 @@ type WarehouseInterface interface {
 	AddComponentUnits(echo.Context) (int, error)
 	AssignUnits(echo.Context) (int, error)
 	GetAllWarehouseIssues(echo.Context) (int, []IssueModel, int, int, int, error)
+	GetAllWarehouseComponents(echo.Context) (int, []AllComponentsModel, error)
 }
 
 type GetAllIssuesModel struct {

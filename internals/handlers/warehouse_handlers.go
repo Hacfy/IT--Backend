@@ -78,3 +78,15 @@ func (wh *WarehouseHandler) GetAllIssuesHandler(e echo.Context) error {
 		},
 	})
 }
+
+func (wh *WarehouseHandler) GetAllWarehouseComponentsHandler(e echo.Context) error {
+	status, components, err := wh.WarehouseRepo.GetAllWarehouseComponents(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"components": components,
+		"total":      len(components),
+	})
+}

@@ -244,3 +244,60 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 	return http.StatusOK, issues, total, nil
 
 }
+
+func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllComponentsModel, error) {
+	query := "SELECT id, name, prefix, warehouse_id FROM components WHERE warehouse_id = $1"
+	var components []models.AllComponentsModel
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, warehouse_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no components found for user %v", warehouse_id)
+			return nil, fmt.Errorf("no components found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var component models.AllComponentsModel
+		if err := rows.Scan(
+			&component.ComponentID,
+			&component.ComponentName,
+			&component.Prefix,
+			&component.WarehouseID,
+		); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, fmt.Errorf("error occured while retrieving data")
+		}
+
+		Query := fmt.Sprintf(`SELECT COUNT(*) FROM %s_units WHERE component_id = $1`, component.Prefix)
+
+		var units int
+
+		if err := tx.QueryRow(Query, component.ComponentID).Scan(&units); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, fmt.Errorf("error occured while retrieving data")
+		}
+
+		component.Units = units
+		components = append(components, component)
+	}
+
+	return components, nil
+}

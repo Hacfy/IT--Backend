@@ -352,21 +352,29 @@ func (wr *WarehouseRepo) GetAllWarehouseIssues(e echo.Context) (int, []models.Is
 
 }
 
-// func (wr *WarehouseRepo) GetAllComponents(e echo.Context) {
-// 	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
-// 	if err != nil {
-// 		return status, err
-// 	}
+func (wr *WarehouseRepo) GetAllWarehouseComponents(e echo.Context) (int, []models.AllComponentsModel, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, []models.AllComponentsModel{}, err
+	}
 
-// 	query := database.NewDBinstance(wr.db)
+	query := database.NewDBinstance(wr.db)
 
-// 	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
-// 	if err != nil {
-// 		log.Printf("Error checking user details: %v", err)
-// 		return http.StatusInternalServerError, fmt.Errorf("database error")
-// 	} else if !ok {
-// 		log.Printf("Invalid user details")
-// 		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
-// 	}
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, []models.AllComponentsModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.AllComponentsModel{}, fmt.Errorf("invalid user details")
+	}
 
-// }
+	comps, err := query.GetAllWarehouseComponents(claims.UserID)
+	if err != nil {
+		log.Printf("error while fetching components: %v", err)
+		return http.StatusInternalServerError, []models.AllComponentsModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, comps, nil
+
+}

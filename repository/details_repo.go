@@ -51,15 +51,15 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 	Sort.Search = e.QueryParam("search")
 	role, ok := e.Get("userType").(string)
 	if !ok {
-		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
+		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user credentials")
 	}
 	userID, ok := e.Get("userID").(int)
 	if !ok {
-		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
+		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user credentials")
 	}
 	userEmail, ok := e.Get("userEmail").(string)
 	if !ok {
-		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
+		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user credentials")
 	}
 
 	query := database.NewDBinstance(dr.db)
