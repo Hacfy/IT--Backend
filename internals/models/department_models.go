@@ -27,6 +27,7 @@ type DepartmentInterface interface {
 	RaiseIssue(echo.Context) (int, int, error)
 	RequestNewUnits(echo.Context) (int, map[int]int, error)
 	GetAllDepartmentRequests(echo.Context) (int, []AllRequestsModel, error)
+	GetDepartmentRequestDetails(echo.Context) (int, RequestDetailsModel, error)
 }
 
 type GetDepartmentIssuesModel struct {
@@ -62,4 +63,22 @@ type RequestNewUnitModel struct {
 	WarehouseID          int         `json:"warehouse_id" validate:"required"`
 	WorkspaceID          int         `json:"workspace_id" validate:"required"`
 	DepartmentID         int         `json:"department_id" validate:"required"`
+}
+
+type RequestDetailsModel struct {
+	RequestID     int    `json:"request_id"`
+	WorkspaceID   int    `json:"workspace_id"`
+	WarehouseID   int    `json:"warehouse_id"`
+	DepartmentID  int    `json:"department_id"`
+	ComponentID   int    `json:"component_id"`
+	NumberOfUnits int    `json:"number_of_units"`
+	Prefix        string `json:"prefix"`
+	CreatedBy     int    `json:"created_by"`
+	CreatedAt     string `json:"created_at"`
+	Status        string `json:"status"`
+}
+
+type GetRequestDetailsModel struct {
+	RequestID    int `json:"request_id" validate:"required"`
+	DepartmentID int `json:"department_id" validate:"required"`
 }

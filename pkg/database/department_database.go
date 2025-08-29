@@ -213,3 +213,21 @@ func (q *Query) GetAllRequests(department_id int) ([]models.AllRequestsModel, er
 
 	return requests, nil
 }
+
+func (q *Query) GetRequestDetails(getRequestDetails models.GetRequestDetailsModel) (models.RequestDetailsModel, error) {
+	query := "SELECT id, workspace_id, warehouse_id, component_id, number_of_units, prefix, created_by, created_at, status FROM requests WHERE id = $1"
+
+	var Request models.RequestDetailsModel
+
+	err := q.db.QueryRow(query, getRequestDetails.RequestID).Scan(&Request.RequestID, &Request.WorkspaceID, &Request.WarehouseID, &Request.ComponentID, &Request.NumberOfUnits, &Request.Prefix, &Request.CreatedBy, &Request.CreatedAt, &Request.Status)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found : %v", err)
+			return models.RequestDetailsModel{}, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return models.RequestDetailsModel{}, fmt.Errorf("error occured while retrieving data")
+	}
+
+	return Request, nil
+}

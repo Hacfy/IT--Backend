@@ -70,3 +70,14 @@ func (dh *DepartmentHandler) GetAllDepartmentRequestsHandler(e echo.Context) err
 		"total":    len(requests),
 	})
 }
+
+func (dh *DepartmentHandler) GetDepartmentRequestDetailsHandler(e echo.Context) error {
+	status, request, err := dh.DepartmentRepo.GetDepartmentRequestDetails(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"request": request,
+	})
+}
