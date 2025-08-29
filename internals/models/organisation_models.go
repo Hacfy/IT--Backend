@@ -33,6 +33,7 @@ type GetAllOrganisationsModel struct {
 type OrganisationInterface interface {
 	CreateSuperAdmin(echo.Context) (int, error)
 	DeleteSuperAdmin(echo.Context) (int, error)
+	GetAllSuperAdmins(echo.Context) (int, []AllSuperAdminsDetailsModel, error)
 }
 
 // type GetAllOrgDepartmentsModel struct {

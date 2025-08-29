@@ -26,3 +26,31 @@ type SuperAdminInterface interface {
 	DeleteBranch(echo.Context) (int, error)
 	UpdateBranchHead(echo.Context) (int, error)
 }
+
+type GetAllSuperAdminsModel struct {
+	OrganisationID int `json:"organisation_id" validate:"required"`
+}
+
+type AllSuperAdminsDetailsModel struct {
+	SuperAdminID    int    `json:"super_admin_id"`
+	SuperAdminName  string `json:"super_admin_name"`
+	SuperAdminEmail string `json:"super_admin_email"`
+	NoOfBranches    int    `json:"no_of_branches"`
+}
+
+type GetSuperAdminDetailsModel struct {
+	SuperAdminID int `json:"super_admin_id" validate:"required"`
+}
+
+type SuperAdminDetailsModel struct {
+	SuperAdminID           int    `json:"super_admin_id"`
+	SuperAdminName         string `json:"super_admin_name"`
+	SuperAdminEmail        string `json:"super_admin_email"`
+	NoOfBranches           int    `json:"no_of_branches"`
+	NoOfDepartments        int    `json:"no_of_departments"`
+	NoOfWarehouses         int    `json:"no_of_warehouses"`
+	NoOfWorkspaces         int    `json:"no_of_workspaces"`
+	TotalTypesOfComponents int    `json:"total_types_of_components"`
+	TotalUnitsOfComponents int    `json:"total_units_of_components"`
+	TotalNoOfIssues        int    `json:"total_no_of_issues"`
+}

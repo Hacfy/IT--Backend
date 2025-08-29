@@ -35,3 +35,15 @@ func (oh *OrganisationHandler) DeleteSuperAdminHandler(e echo.Context) error {
 		"message": "successfull",
 	})
 }
+
+func (oh *OrganisationHandler) GetAllSuperAdminsHandler(e echo.Context) error {
+	status, superAdmins, err := oh.OrgRepo.GetAllSuperAdmins(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"superAdmins": superAdmins,
+		"total":       len(superAdmins),
+	})
+}

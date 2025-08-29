@@ -135,3 +135,43 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 	return http.StatusNoContent, nil
 
 }
+
+func (or *OrgRepo) GetAllSuperAdmins(e echo.Context) (int, []models.AllSuperAdminsDetailsModel, error) {
+	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
+	if err != nil {
+		return status, []models.AllSuperAdminsDetailsModel{}, err
+	}
+
+	query := database.NewDBinstance(or.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("invalid user details")
+	}
+
+	var getAllSuperAdmins models.GetAllSuperAdminsModel
+
+	err = e.Bind(&getAllSuperAdmins)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(getAllSuperAdmins); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("failed to validate request")
+	}
+
+	superAdmins, err := query.GetAllSuperAdmins(getAllSuperAdmins.OrganisationID)
+	if err != nil {
+		log.Printf("error while fetching superAdmins: %v", err)
+		return http.StatusInternalServerError, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, superAdmins, nil
+
+}

@@ -39,12 +39,16 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)
 	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)
+	e.GET("/organisation/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)
+	//GET /organisation/get/details
 
 	superAdminHandler := handlers.NewSuperAdminHandler(repository.NewSuperAdminRepo(db))
 
 	e.POST("/superAdmin/create/branch", superAdminHandler.CreateBranchHandler)
 	e.PUT("/superAdmin/update/branchHead", superAdminHandler.UpdateBranchHeadHandler)
 	e.DELETE("/superAdmin/delete/branch", superAdminHandler.DeleteBranchHandler)
+	// GET /superAdmin/get/all/branches
+	// GET /superAdmin/get/branch/details
 
 	branchHandler := handlers.NewBranchHandler(repository.NewBranchRepo(db))
 

@@ -20,6 +20,8 @@ func NewDetailsRepo(db *sql.DB) *DetailsRepo {
 	return &DetailsRepo{db: db}
 }
 
+// remove the details route and implement them in the specified repo
+
 // returns Departments, status, Total_Departments, Page, Limit, error
 func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepartmentsModel, int, int, int, int, error) {
 	var Sort models.SortModel

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"log"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
@@ -73,6 +74,58 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
 	}
 
 	return nil
+}
+
+func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsDetailsModel, error) {
+	query1 := "SELECT id, name, email FROM super_admins WHERE org_id = $1"
+	query2 := "SELECT COUNT(*) FROM branches WHERE super_admin_id = $1"
+
+	var superAdmins []models.AllSuperAdminsDetailsModel
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query1, organisation_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no superAdmins found for organisation %v", organisation_id)
+			return nil, err
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var superAdmin models.AllSuperAdminsDetailsModel
+		if err := rows.Scan(&superAdmin.SuperAdminID, &superAdmin.SuperAdminName, &superAdmin.SuperAdminEmail); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, err
+		}
+
+		var superAdminBranches int
+		err = tx.QueryRow(query2, superAdmin.SuperAdminID).Scan(&superAdminBranches)
+		if err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, err
+		}
+
+		superAdmin.NoOfBranches = superAdminBranches
+		superAdmins = append(superAdmins, superAdmin)
+	}
+
+	return superAdmins, nil
 }
 
 //query to get all the branches of a perticular organisation
