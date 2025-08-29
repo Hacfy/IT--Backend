@@ -197,3 +197,41 @@ func (dr *DepartmentRepo) RequestNewUnits(e echo.Context) (int, map[int]int, err
 
 	return Status, RequestIDs, nil
 }
+
+func (dr *DepartmentRepo) GetAllDepartmentRequests(e echo.Context) (int, []models.AllRequestsModel, error) {
+	Status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	if err != nil {
+		return Status, []models.AllRequestsModel{}, fmt.Errorf("invalid use token")
+	}
+	query := database.NewDBinstance(dr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, []models.AllRequestsModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.AllRequestsModel{}, fmt.Errorf("invalid user details")
+	}
+
+	var getAllRequests models.GetAllRequestsModel
+
+	err = e.Bind(&getAllRequests)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, []models.AllRequestsModel{}, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(getAllRequests); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, []models.AllRequestsModel{}, fmt.Errorf("failed to validate request")
+	}
+
+	requests, err := query.GetAllRequests(getAllRequests.DepartmentID)
+	if err != nil {
+		log.Printf("error while fetching requests: %v", err)
+		return http.StatusInternalServerError, []models.AllRequestsModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, requests, nil
+}

@@ -35,7 +35,7 @@ This backend solves the problem of managing IT infrastructure within organizatio
 │   ├── middleware/     # JWT, logging, etc.
 │   └── models/         # Request/response structs
 ├── pkg/
-│   ├── database/       # DB connection logic & queries
+│   ├── database/       # DB interactions
 │   ├── templates/      # Response templates (if any)
 │   └── utils/          # Helper functions (JWT, validation)
 └── repository/         # Login & authentication logic

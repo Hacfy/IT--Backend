@@ -58,6 +58,10 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.PUT("/branch/update/warehouseHead", branchHandler.UpdateWarehouseHeadHandler)
 	e.DELETE("/branch/delete/department", branchHandler.DeleteDepartmentHandler)
 	e.DELETE("/branch/delete/warehouse", branchHandler.DeleteWarehouseHandler)
+	// GET /branch/get/all/departments
+	// GET /branch/get/all/warehouses
+	// GET /branch/get/department/details
+	// GET /branch/get/warehouse/details
 
 	departmentHandler := handlers.NewDepartmentHandler(repository.NewDepartmentRepo(db))
 
@@ -65,6 +69,11 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.DELETE("/department/delete/workspace", departmentHandler.DeleteWorkspaceHandler)
 	e.POST("/department/raise/issue", departmentHandler.RaiseIssueHandler)
 	e.POST("/department/request/new/units", departmentHandler.RequestNewUnitsHandler)
+	// GET /department/get/all/workspaces
+	// GET /department/get/issue/details
+	// GET /department/get/all/issues
+	e.GET("/department/get/all/requests", departmentHandler.GetAllDepartmentRequestsHandler)
+	// GET /department/get/request/details
 
 	warehouseHandler := handlers.NewWarehouse_Handler(repository.NewWarehouseRepo(db))
 
@@ -76,6 +85,11 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)
 	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler)
 	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)
+	// PUT /warehouse/update/component
+	// GET /warehouse/get/component/details
+	// GET /warehouse/get/assigned/units
+	// GET /warehouse/get/unit/history
+	// PUT /warehouse/update/issue/status
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 

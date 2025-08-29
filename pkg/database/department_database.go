@@ -165,3 +165,51 @@ func (q *Query) RequestNewUnits(department_id int, workspace_id int, warehouse_i
 
 	return http.StatusCreated, Request_id, nil
 }
+
+func (q *Query) GetAllRequests(department_id int) ([]models.AllRequestsModel, error) {
+	query := "SELECT id, workspace_id, warehouse_id, component_id, number_of_units, prefix, created_at, status FROM requests WHERE department_id = $1"
+
+	var requests []models.AllRequestsModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, department_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found : %v", err)
+			return nil, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var request models.AllRequestsModel
+		if err := rows.Scan(&request.RequestID, &request.WorkspaceID, &request.WarehouseID, &request.ComponentID, &request.NumberOfUnits, &request.Prefix, &request.CreatedAt, &request.Status); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, fmt.Errorf("error occured while retrieving data")
+		}
+		requests = append(requests, request)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("row iteration error: %v", err)
+		return nil, fmt.Errorf("internal server error, please try again later")
+	}
+
+	return requests, nil
+}

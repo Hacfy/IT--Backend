@@ -58,3 +58,15 @@ func (dh *DepartmentHandler) RequestNewUnitsHandler(e echo.Context) error {
 		"totalRequest": len(requestIDs),
 	})
 }
+
+func (dh *DepartmentHandler) GetAllDepartmentRequestsHandler(e echo.Context) error {
+	status, requests, err := dh.DepartmentRepo.GetAllDepartmentRequests(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"requests": requests,
+		"total":    len(requests),
+	})
+}
