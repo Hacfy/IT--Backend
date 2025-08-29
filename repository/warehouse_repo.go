@@ -352,10 +352,10 @@ func (wr *WarehouseRepo) GetAllWarehouseIssues(e echo.Context) (int, []models.Is
 
 }
 
-func (wr *WarehouseRepo) GetAllWarehouseComponents(e echo.Context) (int, []models.AllComponentsModel, error) {
+func (wr *WarehouseRepo) GetAllWarehouseComponents(e echo.Context) (int, []models.AllWarehouseComponentsModel, error) {
 	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
 	if err != nil {
-		return status, []models.AllComponentsModel{}, err
+		return status, []models.AllWarehouseComponentsModel{}, err
 	}
 
 	query := database.NewDBinstance(wr.db)
@@ -363,18 +363,58 @@ func (wr *WarehouseRepo) GetAllWarehouseComponents(e echo.Context) (int, []model
 	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
-		return http.StatusInternalServerError, []models.AllComponentsModel{}, fmt.Errorf("database error")
+		return http.StatusInternalServerError, []models.AllWarehouseComponentsModel{}, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user details")
-		return http.StatusUnauthorized, []models.AllComponentsModel{}, fmt.Errorf("invalid user details")
+		return http.StatusUnauthorized, []models.AllWarehouseComponentsModel{}, fmt.Errorf("invalid user details")
 	}
 
 	comps, err := query.GetAllWarehouseComponents(claims.UserID)
 	if err != nil {
 		log.Printf("error while fetching components: %v", err)
-		return http.StatusInternalServerError, []models.AllComponentsModel{}, fmt.Errorf("database error")
+		return http.StatusInternalServerError, []models.AllWarehouseComponentsModel{}, fmt.Errorf("database error")
 	}
 
 	return http.StatusOK, comps, nil
+
+}
+
+func (wr *WarehouseRepo) GetAllWarehouseComponentUnits(e echo.Context) (int, []models.AllComponentUnitsModel, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, []models.AllComponentUnitsModel{}, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, []models.AllComponentUnitsModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.AllComponentUnitsModel{}, fmt.Errorf("invalid user details")
+	}
+
+	var getAllComponentUnitsModel models.GetAllComponentUnitsModel
+
+	err = e.Bind(&getAllComponentUnitsModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, []models.AllComponentUnitsModel{}, fmt.Errorf("invalid request format")
+	}
+
+	if getAllComponentUnitsModel.ComponentID <= 0 {
+		log.Printf("invalid component id")
+		return http.StatusBadRequest, []models.AllComponentUnitsModel{}, fmt.Errorf("invalid component id")
+	}
+
+	units, err := query.GetAllWarehouseComponentUnits(getAllComponentUnitsModel.ComponentID)
+	if err != nil {
+		log.Printf("error while fetching components: %v", err)
+		return http.StatusInternalServerError, []models.AllComponentUnitsModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, units, nil
 
 }

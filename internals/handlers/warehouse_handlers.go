@@ -90,3 +90,15 @@ func (wh *WarehouseHandler) GetAllWarehouseComponentsHandler(e echo.Context) err
 		"total":      len(components),
 	})
 }
+
+func (wh *WarehouseHandler) GetAllWarehouseComponentUnitsHandler(e echo.Context) error {
+	status, units, err := wh.WarehouseRepo.GetAllWarehouseComponentUnits(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"units": units,
+		"total": len(units),
+	})
+}

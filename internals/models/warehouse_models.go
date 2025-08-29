@@ -34,7 +34,8 @@ type WarehouseInterface interface {
 	AddComponentUnits(echo.Context) (int, error)
 	AssignUnits(echo.Context) (int, error)
 	GetAllWarehouseIssues(echo.Context) (int, []IssueModel, int, int, int, error)
-	GetAllWarehouseComponents(echo.Context) (int, []AllComponentsModel, error)
+	GetAllWarehouseComponents(echo.Context) (int, []AllWarehouseComponentsModel, error)
+	GetAllWarehouseComponentUnits(echo.Context) (int, []AllComponentUnitsModel, error)
 }
 
 type GetAllIssuesModel struct {
@@ -42,4 +43,8 @@ type GetAllIssuesModel struct {
 	Issue        string `json:"issue" validate:"required"`
 	DepartmentID int    `json:"department_id" validate:"required"`
 	WorkspaceID  int    `json:"workspace_id" validate:"required"`
+}
+
+type GetAllComponentUnitsModel struct {
+	ComponentID int `json:"component_id" validate:"required"`
 }

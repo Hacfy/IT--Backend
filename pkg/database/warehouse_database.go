@@ -245,9 +245,9 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 
 }
 
-func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllComponentsModel, error) {
-	query := "SELECT id, name, prefix, warehouse_id FROM components WHERE warehouse_id = $1"
-	var components []models.AllComponentsModel
+func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllWarehouseComponentsModel, error) {
+	query := "SELECT id, name, prefix FROM components WHERE warehouse_id = $1"
+	var components []models.AllWarehouseComponentsModel
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
@@ -275,12 +275,11 @@ func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllCompone
 	defer rows.Close()
 
 	for rows.Next() {
-		var component models.AllComponentsModel
+		var component models.AllWarehouseComponentsModel
 		if err := rows.Scan(
 			&component.ComponentID,
 			&component.ComponentName,
 			&component.Prefix,
-			&component.WarehouseID,
 		); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, fmt.Errorf("error occured while retrieving data")
@@ -300,4 +299,73 @@ func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllCompone
 	}
 
 	return components, nil
+}
+
+func (q *Query) GetAllWarehouseComponentUnits(component_id int) ([]models.AllComponentUnitsModel, error) {
+	query1 := "SELECT prefix FROM components WHERE id = $1"
+
+	var units []models.AllComponentUnitsModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	var prefix string
+
+	err = tx.QueryRow(query1, component_id).Scan(&prefix)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no components found for component id %v", component_id)
+			return nil, fmt.Errorf("no components found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, fmt.Errorf("error occured while retrieving data")
+	}
+
+	query2 := fmt.Sprintf(`SELECT id, warehouse_id, warranty_date, status, cost, maintainance_cost FROM %s_units WHERE component_id = $1`, prefix)
+	rows, err := tx.Query(query2, component_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", component_id)
+			return nil, fmt.Errorf("no units found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var unit models.AllComponentUnitsModel
+		if err := rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.WarrantyDate, &unit.Status, &unit.Cost, &unit.MaintenanceCost); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, fmt.Errorf("error occured while retrieving data")
+		}
+		query3 := fmt.Sprintf(`SELECT COUNT(*) FROM %s_units_assigned WHERE unit_id = $1`, prefix)
+
+		var units_assigned int
+
+		if err := tx.QueryRow(query3, unit.UnitID).Scan(&units_assigned); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, fmt.Errorf("error occured while retrieving data")
+		}
+		if units_assigned > 0 {
+			unit.Assigned = true
+		} else {
+			unit.Assigned = false
+		}
+		units = append(units, unit)
+	}
+
+	return units, nil
 }

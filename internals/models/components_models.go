@@ -27,10 +27,9 @@ type DeleteComponentModel struct {
 	Prefix        string `json:"prefix" validate:"required"`
 }
 
-type AllComponentsModel struct {
+type AllWarehouseComponentsModel struct {
 	ComponentID   int    `json:"component_id"`
 	ComponentName string `json:"component_name"`
 	Prefix        string `json:"prefix"`
-	WarehouseID   int    `json:"warehouse_id"`
 	Units         int    `json:"units"`
 }

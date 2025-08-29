@@ -59,3 +59,13 @@ type AllWarehousesModel struct {
 	TotalUnitsOfComponents int    `json:"total_units_of_components"`
 	TotalNoOfIssues        int    `json:"total_no_of_issues"`
 }
+
+type AllComponentUnitsModel struct {
+	UnitID          int     `json:"unit_id"`
+	WarehouseID     int     `json:"warehouse_id"`
+	WarrantyDate    int     `json:"warranty_date"`
+	Status          string  `json:"status"`
+	Assigned        bool    `json:"assigned"`
+	Cost            float32 `json:"cost"`
+	MaintenanceCost float32 `json:"maintenance_cost"`
+}

@@ -70,7 +70,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.PATCH("/warehouse/assign/units", warehouseHandler.AssignUnitsHandler)
 	e.GET("/warehouse/get/all/issues", warehouseHandler.GetAllIssuesHandler)
 	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)
-	//get all component units
+	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler)
 	//get issue details
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
