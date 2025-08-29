@@ -102,3 +102,14 @@ func (wh *WarehouseHandler) GetAllWarehouseComponentUnitsHandler(e echo.Context)
 		"total": len(units),
 	})
 }
+
+func (wh *WarehouseHandler) GetIssueDetailsHandler(e echo.Context) error {
+	status, issue, err := wh.WarehouseRepo.GetIssueDetails(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"issue": issue,
+	})
+}

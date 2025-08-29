@@ -23,3 +23,19 @@ type DepartmentIssuesModel struct {
 	UnitPrefix  string `json:"unit_prefix"`
 	WorkspaceID int    `json:"workspace_id"`
 }
+
+type GetIssueDetailsModel struct {
+	IssueID int `json:"issue_id" validate:"required"`
+}
+
+type IssueDetailsModel struct {
+	IssueID      int       `json:"issue_id"`
+	DepartmentID int       `json:"department_id"`
+	WarehouseID  int       `json:"warehouse_id"`
+	WorkspaceID  int       `json:"workspace_id"`
+	UnitID       int       `json:"unit_id"`
+	UnitPrefix   string    `json:"unit_prefix"`
+	Issue        string    `json:"issue"`
+	Created_at   time.Time `json:"created_at"`
+	Status       string    `json:"status"`
+}

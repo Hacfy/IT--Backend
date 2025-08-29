@@ -369,3 +369,36 @@ func (q *Query) GetAllWarehouseComponentUnits(component_id int) ([]models.AllCom
 
 	return units, nil
 }
+
+func (q *Query) GetIssueDetails(issue_id int) (models.IssueDetailsModel, error) {
+	query1 := "SELECT department_id, warehouse_id, workspace_id, unit_id, unit_prefix, issue, created_at, status FROM issues WHERE id = $1"
+
+	var issue models.IssueDetailsModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return issue, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	err = tx.QueryRow(query1, issue_id).Scan(&issue.DepartmentID, &issue.WarehouseID, &issue.WorkspaceID, &issue.UnitID, &issue.UnitPrefix, &issue.Issue, &issue.Created_at, &issue.Status)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return issue, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return issue, fmt.Errorf("error occured while retrieving data")
+	}
+
+	return issue, nil
+}

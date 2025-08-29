@@ -418,3 +418,43 @@ func (wr *WarehouseRepo) GetAllWarehouseComponentUnits(e echo.Context) (int, []m
 	return http.StatusOK, units, nil
 
 }
+
+func (wr *WarehouseRepo) GetIssueDetails(e echo.Context) (int, models.IssueDetailsModel, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, models.IssueDetailsModel{}, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, models.IssueDetailsModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, models.IssueDetailsModel{}, fmt.Errorf("invalid user details")
+	}
+
+	var getIssueDetailsModel models.GetIssueDetailsModel
+
+	err = e.Bind(&getIssueDetailsModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, models.IssueDetailsModel{}, fmt.Errorf("invalid request format")
+	}
+
+	if getIssueDetailsModel.IssueID <= 0 {
+		log.Printf("invalid issue id")
+		return http.StatusBadRequest, models.IssueDetailsModel{}, fmt.Errorf("invalid issue id")
+	}
+
+	issue, err := query.GetIssueDetails(getIssueDetailsModel.IssueID)
+	if err != nil {
+		log.Printf("error while fetching issue details: %v", err)
+		return http.StatusInternalServerError, models.IssueDetailsModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, issue, nil
+
+}
