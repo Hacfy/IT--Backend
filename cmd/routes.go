@@ -47,7 +47,6 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/superAdmin/create/branch", superAdminHandler.CreateBranchHandler)
 	e.PUT("/superAdmin/update/branchHead", superAdminHandler.UpdateBranchHeadHandler)
 	e.DELETE("/superAdmin/delete/branch", superAdminHandler.DeleteBranchHandler)
-	// GET /superAdmin/get/all/branches
 	// GET /superAdmin/get/branch/details
 
 	branchHandler := handlers.NewBranchHandler(repository.NewBranchRepo(db))
@@ -58,8 +57,6 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.PUT("/branch/update/warehouseHead", branchHandler.UpdateWarehouseHeadHandler)
 	e.DELETE("/branch/delete/department", branchHandler.DeleteDepartmentHandler)
 	e.DELETE("/branch/delete/warehouse", branchHandler.DeleteWarehouseHandler)
-	// GET /branch/get/all/departments
-	// GET /branch/get/all/warehouses
 	// GET /branch/get/department/details
 	// GET /branch/get/warehouse/details
 
