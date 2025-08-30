@@ -317,7 +317,7 @@ func (br *BranchRepo) DeleteDepartment(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
 	}
 
-	ok, err = query.IsDepartmentUnderBranchHead(department.DepartmentID, claims.UserID)
+	ok, err = query.CheckIfDepartmentUnderBranchHead(department.DepartmentID, claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -387,7 +387,7 @@ func (br *BranchRepo) DeleteWarehouse(e echo.Context) (int, error) {
 		log.Printf("wrong password %v: %v", warehouse.BranchHeadPassword, err)
 		return http.StatusBadRequest, fmt.Errorf("invalid user details")
 	}
-	ok, err = query.IsWarehouseUnderBranchHead(warehouse.WarehouseID, claims.UserID)
+	ok, err = query.CheckIfWarehouseUnderBranchHead(warehouse.WarehouseID, claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

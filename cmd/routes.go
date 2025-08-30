@@ -93,6 +93,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 
+	// remove all these routes and implement them in the specified repo
 	e.GET("/details/get/all/departments", detailsHandler.GetAllDepartmentsHandler)
 	e.GET("/details/get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)
 	e.GET("/details/get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)

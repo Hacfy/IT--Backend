@@ -350,7 +350,7 @@ func (q *Query) GetAllBranches(super_admin_id int, sort models.SortModel) (int, 
 	return http.StatusOK, Branches, Total_branches, nil
 }
 
-func (q *Query) IsDepartmentUnderBranchHead(department_id, user_id int) (bool, error) {
+func (q *Query) CheckIfDepartmentUnderBranchHead(department_id, user_id int) (bool, error) {
 	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id = (SELECT branch_id FROM branch_heads WHERE id = $2)"
 	var exists bool
 	err := q.db.QueryRow(query, department_id, user_id).Scan(&exists)
@@ -360,7 +360,7 @@ func (q *Query) IsDepartmentUnderBranchHead(department_id, user_id int) (bool, e
 	return exists, nil
 }
 
-func (q *Query) IsWarehouseUnderBranchHead(warehouse_id, user_id int) (bool, error) {
+func (q *Query) CheckIfWarehouseUnderBranchHead(warehouse_id, user_id int) (bool, error) {
 	query := "SELECT EXISTS(SELECT 1 FROM warehouses WHERE warehouse_id = $1 AND branch_id = (SELECT branch_id FROM branch_heads WHERE id = $2)"
 	var exists bool
 	err := q.db.QueryRow(query, warehouse_id, user_id).Scan(&exists)
@@ -384,4 +384,64 @@ func (q *Query) CheckIfWarehouseIDExistsInTheDepartmentsBranch(warehouse_id, use
 	err := q.db.QueryRow(query, warehouse_id, user_id).Scan(&same_branch)
 
 	return same_branch, err
+}
+
+func (q *Query) CheckBranchHead(user_id, branch_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM branch_heads WHERE id = $1 AND branch_id = $2)"
+	var exists bool
+	err := q.db.QueryRow(query, user_id, branch_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) CheckIfBranchUnderSuperAdmin(branch_id, user_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM branches WHERE branch_id = $1 AND super_admin_id = (SELECT id FROM super_admins WHERE id = $2))"
+	var exists bool
+	err := q.db.QueryRow(query, branch_id, user_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) CheckIfBranchUnderOrganisationAdmin(branch_id, user_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM branches WHERE branch_id = $1 AND org_id = (SELECT id FROM organisations WHERE id = $2))"
+	var exists bool
+	err := q.db.QueryRow(query, branch_id, user_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) CheckDepartmentHead(user_id, department_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM department_heads WHERE id = $1 AND department_id = $2)"
+	var exists bool
+	err := q.db.QueryRow(query, user_id, department_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) CheckIfDepartmentUnderSuperAdmin(department_id, user_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id IN (SELECT branch_id FROM branches WHERE super_admin_id = (SELECT id FROM super_admins WHERE id = $2)))"
+	var exists bool
+	err := q.db.QueryRow(query, department_id, user_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) CheckIfDepartmentUnderOrganisationAdmin(department_id, user_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id IN (SELECT branch_id FROM branches WHERE org_id = (SELECT id FROM organisations WHERE id = $2)))"
+	var exists bool
+	err := q.db.QueryRow(query, department_id, user_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

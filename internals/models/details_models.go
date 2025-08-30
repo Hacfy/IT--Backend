@@ -20,7 +20,7 @@ type DetailsInterface interface {
 	GetAllDepartmentsRepo(echo.Context) ([]AllDepartmentsModel, int, int, int, int, error)
 	GetDepartmentIssues(echo.Context) (int, []DepartmentIssuesModel, int, int, int, error)
 	GetDepartmentWorkspaces(echo.Context) ([]DepartmentWorkspaceModel, int, int, int, int, error)
-	GetAllBranches(echo.Context) ([]AllBranchesModel, int, int, int, int, error)
+	GetAllBranchesUnderSuperAdmin(echo.Context) ([]AllBranchesModel, int, int, int, int, error)
 }
 
 type DepartmentWorkspaceModel struct {

@@ -69,7 +69,7 @@ func (dh *DetailsHandler) GetDepartmentWorkspacesHandler(e echo.Context) error {
 }
 
 func (db *DetailsHandler) GetAllBranchesHandler(e echo.Context) error {
-	Branches, Status, Total, Page, Limit, err := db.DetailsRepo.GetAllBranches(e)
+	Branches, Status, Total, Page, Limit, err := db.DetailsRepo.GetAllBranchesUnderSuperAdmin(e)
 	if err != nil {
 		return echo.NewHTTPError(Status, err)
 	}

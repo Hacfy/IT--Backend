@@ -87,6 +87,39 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 		return []models.AllDepartmentsModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
 	}
 
+	switch role {
+	case "branch_head":
+		ok, err := query.CheckBranchHead(userID, Request.BranchID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "super_admin":
+		ok, err := query.CheckIfBranchUnderSuperAdmin(Request.BranchID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "organisation_admin":
+		ok, err := query.CheckIfBranchUnderOrganisationAdmin(Request.BranchID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	default:
+		log.Printf("Invalid user role")
+		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user role")
+	}
+
 	status, Departments, Total_Departments, err := query.GetAllDepartments(Request.BranchID, Sort)
 	if err != nil {
 		return []models.AllDepartmentsModel{}, status, Total_Departments, Sort.Page, Sort.Limit, err
@@ -162,6 +195,48 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 		return http.StatusBadRequest, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
 	}
 
+	switch role {
+	case "department_head":
+		ok, err := query.CheckDepartmentHead(userID, Request.DepartmentID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "branch_head":
+		ok, err := query.CheckIfDepartmentUnderBranchHead(Request.DepartmentID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "super_admin":
+		ok, err := query.CheckIfDepartmentUnderSuperAdmin(Request.DepartmentID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "organisation_admin":
+		ok, err := query.CheckIfDepartmentUnderOrganisationAdmin(Request.DepartmentID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	default:
+		log.Printf("Invalid user role")
+		return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user role")
+	}
+
 	status, Issues, Total_Issues, err := query.GetDepartmentIssues(Request.DepartmentID, Sort)
 	if err != nil {
 		return status, []models.DepartmentIssuesModel{}, Total_Issues, Sort.Page, Sort.Limit, err
@@ -234,6 +309,48 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 		return nil, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
 	}
 
+	switch role {
+	case "department_head":
+		ok, err := query.CheckDepartmentHead(userID, Request.DepartmentID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "branch_head":
+		ok, err := query.CheckIfDepartmentUnderBranchHead(Request.DepartmentID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "super_admin":
+		ok, err := query.CheckIfDepartmentUnderSuperAdmin(Request.DepartmentID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	case "organisation_admin":
+		ok, err := query.CheckIfDepartmentUnderOrganisationAdmin(Request.DepartmentID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
+		}
+	default:
+		log.Printf("Invalid user role")
+		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user role")
+	}
+
 	status, Workspaces, Total_Workspaces, err := query.GetAllWorkspaces(Request.DepartmentID, Sort)
 	if err != nil {
 		return nil, status, -1, Sort.Page, Sort.Limit, err
@@ -243,7 +360,7 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 }
 
 // get all branches
-func (dr *DetailsRepo) GetAllBranches(e echo.Context) ([]models.AllBranchesModel, int, int, int, int, error) {
+func (dr *DetailsRepo) GetAllBranchesUnderSuperAdmin(e echo.Context) ([]models.AllBranchesModel, int, int, int, int, error) {
 	var Sort models.SortModel
 	Sort.Limit, _ = strconv.Atoi(e.QueryParam("limit"))
 	if Sort.Limit <= 0 || Sort.Limit > 100 {
@@ -271,10 +388,6 @@ func (dr *DetailsRepo) GetAllBranches(e echo.Context) ([]models.AllBranchesModel
 	}
 
 	Sort.Search = e.QueryParam("search")
-	role, ok := e.Get("userType").(string)
-	if !ok {
-		return []models.AllBranchesModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
-	}
 	userID, ok := e.Get("userID").(int)
 	if !ok {
 		return []models.AllBranchesModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
@@ -286,7 +399,7 @@ func (dr *DetailsRepo) GetAllBranches(e echo.Context) ([]models.AllBranchesModel
 
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(userEmail, role, userID)
+	ok, err := query.VerifyUser(userEmail, "super_admin", userID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return []models.AllBranchesModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
