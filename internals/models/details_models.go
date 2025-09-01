@@ -21,6 +21,7 @@ type DetailsInterface interface {
 	GetDepartmentIssues(echo.Context) (int, []DepartmentIssuesModel, int, int, int, error)
 	GetDepartmentWorkspaces(echo.Context) ([]DepartmentWorkspaceModel, int, int, int, int, error)
 	GetAllBranchesUnderSuperAdmin(echo.Context) ([]AllBranchesModel, int, int, int, int, error)
+	GetAllWarehouses(echo.Context) ([]AllWarehousesModel, int, error)
 }
 
 type DepartmentWorkspaceModel struct {
@@ -53,11 +54,9 @@ type GetAllWarehousesModel struct {
 }
 
 type AllWarehousesModel struct {
-	WarehouseID            int    `json:"warehouse_id"`
-	Warehouse              string `json:"warehouse"`
-	TotalTypesOfComponents int    `json:"total_types_of_components"`
-	TotalUnitsOfComponents int    `json:"total_units_of_components"`
-	TotalNoOfIssues        int    `json:"total_no_of_issues"`
+	WarehouseID int    `json:"warehouse_id"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
 }
 
 type AllComponentUnitsModel struct {

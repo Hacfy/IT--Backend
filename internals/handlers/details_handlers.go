@@ -84,3 +84,15 @@ func (db *DetailsHandler) GetAllBranchesHandler(e echo.Context) error {
 		},
 	})
 }
+
+func (db *DetailsHandler) GetAllWarehousesHandler(e echo.Context) error {
+	Warehouses, Status, err := db.DetailsRepo.GetAllWarehouses(e)
+	if err != nil {
+		return echo.NewHTTPError(Status, err)
+	}
+
+	return e.JSON(Status, echo.Map{
+		"warehouses": Warehouses,
+		"total":      len(Warehouses),
+	})
+}

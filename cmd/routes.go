@@ -66,9 +66,6 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.DELETE("/department/delete/workspace", departmentHandler.DeleteWorkspaceHandler)
 	e.POST("/department/raise/issue", departmentHandler.RaiseIssueHandler)
 	e.POST("/department/request/new/units", departmentHandler.RequestNewUnitsHandler)
-	// GET /department/get/all/workspaces
-	// GET /department/get/issue/details
-	// GET /department/get/all/issues
 	e.GET("/department/get/all/requests", departmentHandler.GetAllDepartmentRequestsHandler)
 	e.GET("/department/get/request/details", departmentHandler.GetDepartmentRequestDetailsHandler)
 
@@ -90,10 +87,11 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 
-	// remove all these routes and implement them in the specified repo
 	e.GET("/details/get/all/departments", detailsHandler.GetAllDepartmentsHandler)
 	e.GET("/details/get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)
 	e.GET("/details/get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)
 	e.GET("/details/get/all/branches", detailsHandler.GetAllBranchesHandler)
+	e.GET("/details/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)
+
 	return e
 }

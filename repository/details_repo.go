@@ -480,78 +480,84 @@ func (dr *DetailsRepo) GetAllBranchesUnderSuperAdmin(e echo.Context) ([]models.A
 
 // get all warehouses
 
-// func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesModel, int, int, int, int, error) {
-// 	var Sort models.SortModel
-// 	Sort.Limit, _ = strconv.Atoi(e.QueryParam("limit"))
-// 	if Sort.Limit <= 0 || Sort.Limit > 100 {
-// 		Sort.Limit = 10
-// 	}
-// 	Sort.Page, _ = strconv.Atoi(e.QueryParam("page"))
-// 	if Sort.Page <= 0 {
-// 		Sort.Page = 1
-// 	}
-// 	Sort.Offset = (Sort.Page - 1) * Sort.Limit
+func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesModel, int, error) {
 
-// 	Sort.Order = e.QueryParam("order")
-// 	if Sort.Order != "asc" && Sort.Order != "desc" {
-// 		Sort.Order = "asc"
-// 	}
+	role, ok := e.Get("userType").(string)
+	if !ok {
+		return nil, http.StatusUnauthorized, fmt.Errorf("invalid use credentials")
+	}
+	userID, ok := e.Get("userID").(int)
+	if !ok {
+		return nil, http.StatusUnauthorized, fmt.Errorf("invalid use credentials")
+	}
+	userEmail, ok := e.Get("userEmail").(string)
+	if !ok {
+		return nil, http.StatusUnauthorized, fmt.Errorf("invalid use credentials")
+	}
 
-// 	Sort.SortBy = e.QueryParam("sortBy")
-// 	if Sort.SortBy == "" {
-// 		Sort.SortBy = "warehouse_id"
-// 	}
+	query := database.NewDBinstance(dr.db)
 
-// 	allowed := map[string]bool{"warehouse_name": true, "warehouse_id": true}
-// 	if !allowed[Sort.SortBy] {
-// 		Sort.SortBy = "warehouse_id"
-// 	}
+	ok, err := query.VerifyUser(userEmail, role, userID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return nil, http.StatusUnauthorized, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
 
-// 	Sort.Search = e.QueryParam("search")
-// 	role, ok := e.Get("userType").(string)
-// 	if !ok {
-// 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
-// 	}
-// 	userID, ok := e.Get("userID").(int)
-// 	if !ok {
-// 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
-// 	}
-// 	userEmail, ok := e.Get("userEmail").(string)
-// 	if !ok {
-// 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid use credentials")
-// 	}
+	var Request models.GetAllWarehousesModel
 
-// 	query := database.NewDBinstance(dr.db)
+	if err := e.Bind(&Request); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return nil, http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
 
-// 	ok, err := query.VerifyUser(userEmail, role, userID)
-// 	if err != nil {
-// 		log.Printf("Error checking user details:", err)
-// 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
-// 	} else if !ok {
-// 		log.Printf("Invalid user details")
-// 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
-// 	}
+	if err := validate.Struct(Request); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return nil, http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
 
-// 	var Request models.GetAllWarehousesModel
+	switch role {
+	case "branch_head":
+		ok, err := query.CheckBranchHead(userID, Request.BranchID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
+		}
+	case "super_admin":
+		ok, err := query.CheckIfBranchUnderSuperAdmin(Request.BranchID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
+		}
+	case "organisation_admin":
+		ok, err := query.CheckIfBranchUnderOrganisationAdmin(Request.BranchID, userID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
+		}
+	default:
+		log.Printf("Invalid user role")
+		return nil, http.StatusUnauthorized, fmt.Errorf("invalid user role")
+	}
 
-// 	if err := e.Bind(&Request); err != nil {
-// 		log.Printf("failed to decode request: %v", err)
-// 		return nil, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid request format")
-// 	}
+	status, warehouses, err := query.GetAllWarehouses(Request.BranchID)
+	if err != nil {
+		return nil, status, err
+	}
 
-// 	if err := validate.Struct(Request); err != nil {
-// 		log.Printf("failed to validate request: %v", err)
-// 		return nil, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
-// 	}
-
-// 	status, warehouses, total, err := query.GetAllWarehouses(Request.BranchID, Sort)
-// 	if err != nil {
-// 		return nil, status, -1, Sort.Page, Sort.Limit, err
-// 	}
-
-// 	return warehouses, status, total, Sort.Page, Sort.Limit, nil
-
-// }
+	return warehouses, status, nil
+}
 
 // // get workspace details
 // // get department details

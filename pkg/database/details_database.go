@@ -445,3 +445,36 @@ func (q *Query) CheckIfDepartmentUnderOrganisationAdmin(department_id, user_id i
 	}
 	return exists, nil
 }
+
+func (q *Query) GetAllWarehouses(branch_id int) (int, []models.AllWarehousesModel, error) {
+
+	query1 := "SELECT id, name, email FROM warehouses WHERE branch_id = $1"
+
+	rows, err := q.db.Query(query1, branch_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no warehouses with branch_id %v found: %v", branch_id, err)
+			return http.StatusNotFound, nil, fmt.Errorf("no warehouses found")
+		}
+		log.Printf("error while getting warehouse data: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("internal server error, please try again later")
+	}
+	defer rows.Close()
+
+	var Warehouses []models.AllWarehousesModel
+
+	for rows.Next() {
+		var warehouse models.AllWarehousesModel
+		if err := rows.Scan(
+			&warehouse.WarehouseID,
+			&warehouse.Name,
+			&warehouse.Email,
+		); err != nil {
+			log.Printf("error while row iteration: %v", err)
+			return http.StatusInternalServerError, nil, fmt.Errorf("internal server error, please try again later")
+		}
+		Warehouses = append(Warehouses, warehouse)
+	}
+
+	return http.StatusOK, Warehouses, nil
+}
