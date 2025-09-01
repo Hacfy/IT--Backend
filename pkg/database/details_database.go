@@ -478,3 +478,150 @@ func (q *Query) GetAllWarehouses(branch_id int) (int, []models.AllWarehousesMode
 
 	return http.StatusOK, Warehouses, nil
 }
+
+func (q *Query) GetComponentPrefix(component_id int) (string, error) {
+	query := "SELECT prefix FROM components WHERE id = $1"
+	var prefix string
+	err := q.db.QueryRow(query, component_id).Scan(&prefix)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching component found :%v", err)
+			return "", fmt.Errorf("no matching component found")
+		}
+		log.Printf("error while getting component prefix: %v", err)
+		return "", err
+	}
+	return prefix, nil
+}
+
+func (q *Query) CheckWarehouseHead(user_id, component_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM warehouses WHERE warehouse_id = $1 AND warehouse_id = (SELECT warehouse_id FROM components WHERE id = $2))"
+	var exists bool
+	err := q.db.QueryRow(query, user_id, component_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) GetAllOutOfWarehouseUnitsInWarehouse(warehouse_id, limit, offset int, prefix string) (int, []models.AllOutOfWarentyUnitsModel, int, error) {
+	query := fmt.Sprintf("SELECT id, warehouse_id, warranty_date FROM %s_units WHERE warenty_date < NOW() LIMIT $1 OFFSET $2", prefix)
+	query1 := "SELECT COUNT(*) FROM %s_units WHERE warenty_date < NOW() "
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, limit, offset)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", prefix)
+			return http.StatusNotFound, []models.AllOutOfWarentyUnitsModel{}, 0, fmt.Errorf("no units found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	var OutOfWarehouseUnits []models.AllOutOfWarentyUnitsModel
+
+	for rows.Next() {
+		var unit models.AllOutOfWarentyUnitsModel
+		if err := rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.ExpiredOn); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
+		}
+		OutOfWarehouseUnits = append(OutOfWarehouseUnits, unit)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("row iteration error: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("internal server error, please try again later")
+	}
+
+	countQuery := fmt.Sprintf(query1, prefix)
+	var total int
+	if err := tx.QueryRow(countQuery).Scan(&total); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", prefix)
+			return http.StatusNotFound, []models.AllOutOfWarentyUnitsModel{}, 0, fmt.Errorf("no units found")
+		}
+		log.Printf("error while scanning data: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
+	}
+
+	return http.StatusOK, OutOfWarehouseUnits, total, nil
+
+}
+
+func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits models.GetAllOutOfWarentyUnitsModel, prefix string, limit, offset int) (int, []models.AllOutOfWarentyUnitsModel, int, error) {
+	query := fmt.Sprintf("SELECT id, warehouse_id, warranty_date FROM %s_units WHERE warenty_date < NOW() AND id IN (SELECT unit_id FROM %s_units_assigned WHERE department_id = $1) LIMIT $2 OFFSET $3", prefix, prefix)
+	query1 := "SELECT COUNT(*) FROM %s_units WHERE warenty_date < NOW() AND id IN (SELECT unit_id FROM %s_units_assigned WHERE department_id = $1)"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, getAllOutOfWarehouseUnits.DepartmentID, limit, offset)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", prefix)
+			return http.StatusNotFound, []models.AllOutOfWarentyUnitsModel{}, 0, fmt.Errorf("no units found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	var OutOfWarentyUnits []models.AllOutOfWarentyUnitsModel
+
+	for rows.Next() {
+		var unit models.AllOutOfWarentyUnitsModel
+		if err := rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.ExpiredOn); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
+		}
+		OutOfWarentyUnits = append(OutOfWarentyUnits, unit)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("row iteration error: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("internal server error, please try again later")
+	}
+
+	countQuery := fmt.Sprintf(query1, prefix, prefix)
+	var total int
+	if err := tx.QueryRow(countQuery, getAllOutOfWarehouseUnits.DepartmentID).Scan(&total); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", prefix)
+			return http.StatusNotFound, []models.AllOutOfWarentyUnitsModel{}, 0, fmt.Errorf("no units found")
+		}
+		log.Printf("error while scanning data: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
+	}
+
+	return http.StatusOK, OutOfWarentyUnits, total, nil
+
+}

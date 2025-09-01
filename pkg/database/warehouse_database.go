@@ -477,3 +477,63 @@ func (q *Query) UpdateComponentName(component_id int, component_name string) (in
 
 	return http.StatusOK, nil
 }
+
+func (q *Query) GetAssignedUnits(prefix string, workspace_id, limit, offset int) ([]models.AssignedUnitsModel, int, error) {
+	query := fmt.Sprintf("SELECT id, warehouse_id, department_id FROM %s_units_assigned WHERE workspace_id = $1 LIMIT $2 OFFSET $3", prefix)
+
+	query1 := "SELECT COUNT(*) FROM %s_units_assigned WHERE workspace_id = $1"
+	var units []models.AssignedUnitsModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, -1, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, workspace_id, limit, offset)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", prefix)
+			return nil, -1, fmt.Errorf("no units found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, -1, fmt.Errorf("error occured while retrieving data")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var unit models.AssignedUnitsModel
+		if err := rows.Scan(&unit.UnitID, &unit.WorkspaceID, &unit.DepartmentID); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, -1, fmt.Errorf("error occured while retrieving data")
+		}
+		units = append(units, unit)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("row iteration error: %v", err)
+		return nil, -1, fmt.Errorf("internal server error, please try again later")
+	}
+
+	countQuery := fmt.Sprintf(query1, prefix)
+	var total int
+	if err := tx.QueryRow(countQuery, workspace_id).Scan(&total); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no units found for component id %v", prefix)
+			return nil, 0, fmt.Errorf("no units found")
+		}
+		log.Printf("error while scanning data: %v", err)
+		return nil, -1, fmt.Errorf("error occured while retrieving data")
+	}
+
+	return units, total, nil
+}

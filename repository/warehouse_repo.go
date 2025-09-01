@@ -592,3 +592,64 @@ func (wr *WarehouseRepo) UpdateComponentName(e echo.Context) (int, error) {
 	return status, nil
 
 }
+
+func (wr *WarehouseRepo) GetAssignedUnits(e echo.Context) (int, []models.AssignedUnitsModel, int, int, int, error) {
+
+	page, err := strconv.Atoi(e.QueryParam("page"))
+	if err != nil {
+		return http.StatusBadRequest, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid request format")
+	}
+
+	limit, err := strconv.Atoi(e.QueryParam("limit"))
+	if err != nil {
+		return http.StatusBadRequest, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid request format")
+	}
+	if limit <= 0 || limit > 100 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, []models.AssignedUnitsModel{}, -1, -1, -1, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid user details")
+	}
+
+	var getAssignedUnitsModel models.GetAssignedUnitsModel
+
+	err = e.Bind(&getAssignedUnitsModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid request format")
+	}
+
+	if getAssignedUnitsModel.ComponentID <= 0 {
+		log.Printf("invalid component id")
+		return http.StatusBadRequest, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
+	}
+
+	prefix, err := query.GetComponentPrefix(getAssignedUnitsModel.ComponentID)
+	if err != nil {
+		log.Printf("error while fetching assigned units: %v", err)
+		return http.StatusInternalServerError, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
+	}
+
+	units, total, err := query.GetAssignedUnits(prefix, getAssignedUnitsModel.WorkspaceID, limit, offset)
+	if err != nil {
+		log.Printf("error while fetching assigned units: %v", err)
+		return http.StatusInternalServerError, []models.AssignedUnitsModel{}, total, -1, -1, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, units, total, limit, page, nil
+
+}

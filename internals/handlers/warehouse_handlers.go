@@ -146,3 +146,20 @@ func (wh *WarehouseHandler) UpdateComponentNameHandler(e echo.Context) error {
 		"message": "successfull",
 	})
 }
+
+func (wh *WarehouseHandler) GetAssignedUnitsHandler(e echo.Context) error {
+	status, units, total, limit, page, err := wh.WarehouseRepo.GetAssignedUnits(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"units": units,
+		"meta": echo.Map{
+			"total": total,
+			"page":  page,
+			"limit": limit,
+			"pages": int(math.Ceil(float64(total) / float64(limit))),
+		},
+	})
+}

@@ -22,6 +22,7 @@ type DetailsInterface interface {
 	GetDepartmentWorkspaces(echo.Context) ([]DepartmentWorkspaceModel, int, int, int, int, error)
 	GetAllBranchesUnderSuperAdmin(echo.Context) ([]AllBranchesModel, int, int, int, int, error)
 	GetAllWarehouses(echo.Context) ([]AllWarehousesModel, int, error)
+	GetAllOutOfWarehouseUnitsInDepartment(echo.Context) (int, []AllOutOfWarentyUnitsModel, int, int, int, error)
 }
 
 type DepartmentWorkspaceModel struct {
@@ -67,4 +68,15 @@ type AllComponentUnitsModel struct {
 	Assigned        bool    `json:"assigned"`
 	Cost            float32 `json:"cost"`
 	MaintenanceCost float32 `json:"maintenance_cost"`
+}
+
+type GetAllOutOfWarentyUnitsModel struct {
+	ComponentID  int `json:"component_id" validate:"required"`
+	DepartmentID int `json:"department_id" validate:"required"`
+}
+
+type AllOutOfWarentyUnitsModel struct {
+	UnitID      int    `json:"unit_id"`
+	WarehouseID int    `json:"warehouse_id"`
+	ExpiredOn   string `json:"expired_on"`
 }

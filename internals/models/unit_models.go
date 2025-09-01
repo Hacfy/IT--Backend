@@ -59,3 +59,14 @@ type UnitAssignmentHistoryModel struct {
 	History []HistoryModel `json:"history"`
 	Total   int            `json:"total"`
 }
+
+type AssignedUnitsModel struct {
+	UnitID       int `json:"unit_id"`
+	WorkspaceID  int `json:"workspace_id"`
+	DepartmentID int `json:"department_id"`
+}
+
+type GetAssignedUnitsModel struct {
+	ComponentID int `json:"component_id" validate:"required"`
+	WorkspaceID int `json:"workspace_id" validate:"required"`
+}

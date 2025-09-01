@@ -40,6 +40,7 @@ type WarehouseInterface interface {
 	GetUnitAssignmentHistory(echo.Context) (int, UnitAssignmentHistoryModel, error)
 	UpdateIssueStatus(echo.Context) (int, error)
 	UpdateComponentName(echo.Context) (int, error)
+	GetAssignedUnits(echo.Context) (int, []AssignedUnitsModel, int, int, int, error)
 }
 
 type GetAllIssuesModel struct {

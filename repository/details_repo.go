@@ -562,3 +562,89 @@ func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesM
 // // get workspace details
 // // get department details
 // // get warehouse details
+
+func (dr *DetailsRepo) GetAllOutOfWarehouseUnitsInDepartment(e echo.Context) (int, []models.AllOutOfWarentyUnitsModel, int, int, int, error) {
+	role, ok := e.Get("userType").(string)
+	if !ok {
+		return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid use credentials")
+	}
+
+	userEmail, ok := e.Get("userEmail").(string)
+	if !ok {
+		return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid use credentials")
+	}
+
+	userID, ok := e.Get("userID").(int)
+	if !ok {
+		return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid use credentials")
+	}
+
+	var Sort models.SortModel
+	Sort.Limit, _ = strconv.Atoi(e.QueryParam("limit"))
+	if Sort.Limit <= 0 || Sort.Limit > 100 {
+		Sort.Limit = 10
+	}
+	Sort.Page, _ = strconv.Atoi(e.QueryParam("page"))
+	if Sort.Page <= 0 {
+		Sort.Page = 1
+	}
+	Sort.Offset = (Sort.Page - 1) * Sort.Limit
+
+	var getAllOutOfWarehouseUnits models.GetAllOutOfWarentyUnitsModel
+
+	err := e.Bind(&getAllOutOfWarehouseUnits)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid request format")
+	}
+
+	if getAllOutOfWarehouseUnits.ComponentID <= 0 {
+		log.Printf("invalid component id")
+		return http.StatusBadRequest, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
+	}
+
+	query := database.NewDBinstance(dr.db)
+
+	ok, err = query.VerifyUser(userEmail, role, userID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid user details")
+	}
+
+	switch role {
+	case "department_head":
+		ok, err := query.CheckDepartmentHead(userID, getAllOutOfWarehouseUnits.DepartmentID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid user details")
+		}
+	case "warehouse_head":
+		ok, err := query.CheckWarehouseHead(userID, getAllOutOfWarehouseUnits.ComponentID)
+		if err != nil {
+			log.Printf("Error checking user details: %v", err)
+			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
+		} else if !ok {
+			log.Printf("Invalid user details")
+			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid user details")
+		}
+	}
+
+	prefix, err := query.GetComponentPrefix(getAllOutOfWarehouseUnits.ComponentID)
+	if err != nil {
+		log.Printf("error while fetching assigned units: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
+	}
+
+	status, warehouses, total, err := query.GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits, prefix, Sort.Limit, Sort.Offset)
+	if err != nil {
+		return status, []models.AllOutOfWarentyUnitsModel{}, total, -1, -1, err
+	}
+
+	return status, warehouses, total, Sort.Limit, Sort.Page, nil
+}
