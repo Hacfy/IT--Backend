@@ -41,3 +41,21 @@ type AssignUnitModel struct {
 	UnitIDs     []int  `json:"unit_ids" validate:"required"`
 	Prefix      string `json:"prefix" validate:"required"`
 }
+
+type GetUnitAssignmentHistoryModel struct {
+	UnitID int `json:"unit_id" validate:"required"`
+}
+
+type HistoryModel struct {
+	WorkspaceID  int    `json:"workspace_id"`
+	DepartmentID int    `json:"department_id"`
+	AssignedAt   string `json:"assigned_at"`
+	DeletedAt    string `json:"deleted_at"`
+	DeletedBy    int    `json:"deleted_by"`
+}
+
+type UnitAssignmentHistoryModel struct {
+	UnitID  int            `json:"unit_id"`
+	History []HistoryModel `json:"history"`
+	Total   int            `json:"total"`
+}

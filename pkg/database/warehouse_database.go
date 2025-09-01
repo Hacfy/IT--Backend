@@ -53,6 +53,7 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 		id INTEGER PRIMARY KEY,
 		department_id INTEGER NOT NULL,
 		workspace_id INTEGER NOT NULL,
+		assigned_at TIMESTAMPTZ DEFAULT NOW(),
 		CONSTRAINT fk_%s_units_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
 		CONSTRAINT fk_%s_units_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
 		CONSTRAINT fk_%s_units_id FOREIGN KEY (id) REFERENCES %s_units(id) ON DELETE CASCADE
@@ -401,4 +402,78 @@ func (q *Query) GetIssueDetails(issue_id int) (models.IssueDetailsModel, error) 
 	}
 
 	return issue, nil
+}
+
+func (q *Query) GetUnitAssignmentHistory(unit_id int) ([]models.HistoryModel, error) {
+	query := "SELECT workspace_id, department_id, assigned_at, deleted_at, deleted_by FROM deleted_units_assigned WHERE unit_id = $1"
+
+	var History []models.HistoryModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, fmt.Errorf("database error")
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, unit_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return nil, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, fmt.Errorf("error occured while retrieving data")
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var history models.HistoryModel
+		if err := rows.Scan(&history.WorkspaceID, &history.DepartmentID, &history.AssignedAt, &history.DeletedAt, &history.DeletedBy); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, fmt.Errorf("error occured while retrieving data")
+		}
+		History = append(History, history)
+	}
+
+	return History, nil
+}
+
+func (q *Query) UpdateIssueStatus(issue_id int, status string) (int, error) {
+	query := "UPDATE issues SET status = $1 WHERE id = $2"
+
+	if _, err := q.db.Exec(query, status, issue_id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while updating issue status: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+}
+
+func (q *Query) UpdateComponentName(component_id int, component_name string) (int, error) {
+	query := "UPDATE components SET name = $1 WHERE id = $2"
+
+	if _, err := q.db.Exec(query, component_name, component_id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while updating component name: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
 }

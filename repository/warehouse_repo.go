@@ -458,3 +458,137 @@ func (wr *WarehouseRepo) GetIssueDetails(e echo.Context) (int, models.IssueDetai
 	return http.StatusOK, issue, nil
 
 }
+
+func (wr *WarehouseRepo) GetUnitAssignmentHistory(e echo.Context) (int, models.UnitAssignmentHistoryModel, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, models.UnitAssignmentHistoryModel{}, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, models.UnitAssignmentHistoryModel{}, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, models.UnitAssignmentHistoryModel{}, fmt.Errorf("invalid user details")
+	}
+
+	var getUnitAssignmentHistoryModel models.GetUnitAssignmentHistoryModel
+
+	err = e.Bind(&getUnitAssignmentHistoryModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, models.UnitAssignmentHistoryModel{}, fmt.Errorf("invalid request format")
+	}
+
+	if getUnitAssignmentHistoryModel.UnitID <= 0 {
+		log.Printf("invalid unit id")
+		return http.StatusBadRequest, models.UnitAssignmentHistoryModel{}, fmt.Errorf("invalid unit id")
+	}
+
+	history, err := query.GetUnitAssignmentHistory(getUnitAssignmentHistoryModel.UnitID)
+	if err != nil {
+		log.Printf("error while fetching unit assignment history: %v", err)
+		return http.StatusInternalServerError, models.UnitAssignmentHistoryModel{}, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, models.UnitAssignmentHistoryModel{
+		UnitID:  getUnitAssignmentHistoryModel.UnitID,
+		History: history,
+		Total:   len(history),
+	}, nil
+
+}
+
+func (wr *WarehouseRepo) UpdateIssueStatus(e echo.Context) (int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var updateIssueStatusModel models.UpdateIssueStatusModel
+
+	err = e.Bind(&updateIssueStatusModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if updateIssueStatusModel.IssueID <= 0 {
+		log.Printf("invalid issue id")
+		return http.StatusBadRequest, fmt.Errorf("invalid issue id")
+	}
+
+	if updateIssueStatusModel.Status == "accepted" || updateIssueStatusModel.Status == "resolved" || updateIssueStatusModel.Status == "raised" {
+		log.Printf("invalid issue status")
+		return http.StatusBadRequest, fmt.Errorf("invalid issue status")
+	}
+
+	status, err = query.UpdateIssueStatus(updateIssueStatusModel.IssueID, updateIssueStatusModel.Status)
+	if err != nil {
+		log.Printf("error while updating issue status: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return status, nil
+
+}
+
+func (wr *WarehouseRepo) UpdateComponentName(e echo.Context) (int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var updateComponentNameModel models.UpdateComponentNameModel
+
+	err = e.Bind(&updateComponentNameModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if updateComponentNameModel.ComponentID <= 0 {
+		log.Printf("invalid component id")
+		return http.StatusBadRequest, fmt.Errorf("invalid component id")
+	}
+
+	if updateComponentNameModel.ComponentName == "" {
+		log.Printf("invalid component name")
+		return http.StatusBadRequest, fmt.Errorf("invalid component name")
+	}
+
+	status, err = query.UpdateComponentName(updateComponentNameModel.ComponentID, updateComponentNameModel.ComponentName)
+	if err != nil {
+		log.Printf("error while updating component name: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return status, nil
+
+}

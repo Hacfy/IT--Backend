@@ -113,3 +113,36 @@ func (wh *WarehouseHandler) GetIssueDetailsHandler(e echo.Context) error {
 		"issue": issue,
 	})
 }
+
+func (wh *WarehouseHandler) GetUnitAssignmentHistoryHandler(e echo.Context) error {
+	status, history, err := wh.WarehouseRepo.GetUnitAssignmentHistory(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"history": history,
+	})
+}
+
+func (wh *WarehouseHandler) UpdateIssueStatusHandler(e echo.Context) error {
+	status, err := wh.WarehouseRepo.UpdateIssueStatus(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (wh *WarehouseHandler) UpdateComponentNameHandler(e echo.Context) error {
+	status, err := wh.WarehouseRepo.UpdateComponentName(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}

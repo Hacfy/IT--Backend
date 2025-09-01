@@ -37,6 +37,9 @@ type WarehouseInterface interface {
 	GetAllWarehouseComponents(echo.Context) (int, []AllWarehouseComponentsModel, error)
 	GetAllWarehouseComponentUnits(echo.Context) (int, []AllComponentUnitsModel, error)
 	GetIssueDetails(echo.Context) (int, IssueDetailsModel, error)
+	GetUnitAssignmentHistory(echo.Context) (int, UnitAssignmentHistoryModel, error)
+	UpdateIssueStatus(echo.Context) (int, error)
+	UpdateComponentName(echo.Context) (int, error)
 }
 
 type GetAllIssuesModel struct {

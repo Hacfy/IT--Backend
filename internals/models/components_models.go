@@ -33,3 +33,8 @@ type AllWarehouseComponentsModel struct {
 	Prefix        string `json:"prefix"`
 	Units         int    `json:"units"`
 }
+
+type UpdateComponentNameModel struct {
+	ComponentID   int    `json:"component_id" validate:"required"`
+	ComponentName string `json:"component_name" validate:"required"`
+}

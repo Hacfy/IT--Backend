@@ -79,11 +79,11 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)
 	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler)
 	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)
-	// PUT /warehouse/update/component
+	e.GET("/warehouse/get/unit/history", warehouseHandler.GetUnitAssignmentHistoryHandler)
+	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)
+	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)
 	// GET /warehouse/get/component/details
 	// GET /warehouse/get/assigned/units
-	// GET /warehouse/get/unit/history
-	// PUT /warehouse/update/issue/status
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 

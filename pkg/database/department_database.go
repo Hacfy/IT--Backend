@@ -79,7 +79,7 @@ func (q *Query) DeleteWorkspace(workspace models.DeleteWorkspaceModel, departmen
 func (q *Query) RaiseIssue(issue models.IssueModel) (int, int, error) {
 	query1 := fmt.Sprintf("SELECT workspace_id FROM %s_units_assigned WHERE unit_id = $1", issue.UnitPrefix)
 	query2 := `INSERT INTO issues (department_id, warehouse_id, workspace_id, unit_id, issue) VALUES($1, $2, $3, $4, $5) RETURNING id`
-	query3 := fmt.Sprintf("UPDATE %s_us_units SET status = repair WHERE id = $1", issue.UnitPrefix)
+	query3 := fmt.Sprintf("UPDATE %s_units SET status = repair WHERE id = $1", issue.UnitPrefix)
 
 	tx, err := q.db.Begin()
 	if err != nil {

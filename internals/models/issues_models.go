@@ -39,3 +39,8 @@ type IssueDetailsModel struct {
 	Created_at   time.Time `json:"created_at"`
 	Status       string    `json:"status"`
 }
+
+type UpdateIssueStatusModel struct {
+	IssueID int    `json:"issue_id" validate:"required"`
+	Status  string `json:"status" validate:"required"`
+}
