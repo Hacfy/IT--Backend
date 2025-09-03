@@ -638,7 +638,7 @@ func (wr *WarehouseRepo) GetAssignedUnits(e echo.Context) (int, []models.Assigne
 		return http.StatusBadRequest, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
 	}
 
-	prefix, err := query.GetComponentPrefix(getAssignedUnitsModel.ComponentID)
+	_, prefix, err := query.GetComponentNameAndPrefix(getAssignedUnitsModel.ComponentID)
 	if err != nil {
 		log.Printf("error while fetching assigned units: %v", err)
 		return http.StatusInternalServerError, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")

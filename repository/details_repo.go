@@ -624,7 +624,7 @@ func (dr *DetailsRepo) GetAllOutOfWarehouseUnitsInDepartment(e echo.Context) (in
 			log.Printf("Invalid user details")
 			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid user details")
 		}
-	case "warehouse_head":
+	case "warehouses":
 		ok, err := query.CheckWarehouseHead(userID, getAllOutOfWarehouseUnits.ComponentID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
@@ -635,7 +635,7 @@ func (dr *DetailsRepo) GetAllOutOfWarehouseUnitsInDepartment(e echo.Context) (in
 		}
 	}
 
-	prefix, err := query.GetComponentPrefix(getAllOutOfWarehouseUnits.ComponentID)
+	_, prefix, err := query.GetComponentNameAndPrefix(getAllOutOfWarehouseUnits.ComponentID)
 	if err != nil {
 		log.Printf("error while fetching assigned units: %v", err)
 		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")

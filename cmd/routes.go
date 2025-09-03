@@ -84,7 +84,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)
 	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)
 	// GET /warehouse/get/component/details
-	// GET /warehouse/get/component/units/outOfWarenty
+	// POST /warehouse/update/component/unit/maintainance
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 
@@ -95,5 +95,10 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.GET("/details/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)
 	e.GET("/details/get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler)
 	// e.GET("/details/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllWarehouseOutOfWarentyUnitsHandler)
+
+	excelHandler := handlers.NewExcelHandler(repository.NewExcelRepo(db))
+
+	e.GET("/excel/download/component/maintainance/report", excelHandler.DownloadComponentMaintainanceReportHandler)
+
 	return e
 }

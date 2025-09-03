@@ -45,6 +45,7 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 		status unit_status DEFAULT 'working',
 		cost NUMERIC(10, 2) NOT NULL,
 		maintainance_cost NUMERIC(10, 2) DEFAULT 0,
+		last_maintenance_date TIMESTAMPTZ,
 		CONSTRAINT fk_%s_units_component_id FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE,
 		CONSTRAINT fk_%s_units_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE CASCADE
 	)`, prefix, prefix, prefix)

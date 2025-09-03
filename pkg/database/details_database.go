@@ -479,19 +479,20 @@ func (q *Query) GetAllWarehouses(branch_id int) (int, []models.AllWarehousesMode
 	return http.StatusOK, Warehouses, nil
 }
 
-func (q *Query) GetComponentPrefix(component_id int) (string, error) {
-	query := "SELECT prefix FROM components WHERE id = $1"
+func (q *Query) GetComponentNameAndPrefix(component_id int) (string, string, error) {
+	query := "SELECT name,prefix FROM components WHERE id = $1"
 	var prefix string
-	err := q.db.QueryRow(query, component_id).Scan(&prefix)
+	var name string
+	err := q.db.QueryRow(query, component_id).Scan(&name, &prefix)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching component found :%v", err)
-			return "", fmt.Errorf("no matching component found")
+			return "", "", fmt.Errorf("no matching component found")
 		}
 		log.Printf("error while getting component prefix: %v", err)
-		return "", err
+		return "", "", err
 	}
-	return prefix, nil
+	return name, prefix, nil
 }
 
 func (q *Query) CheckWarehouseHead(user_id, component_id int) (bool, error) {
@@ -624,4 +625,24 @@ func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits mo
 
 	return http.StatusOK, OutOfWarentyUnits, total, nil
 
+}
+
+func (q *Query) CheckIfComponentBelongsToWarehouse(component_id, user_id int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM warehouses WHERE id = $1 AND id = (SELECT warehouse_id FROM components WHERE id = $2))"
+	var exists bool
+	err := q.db.QueryRow(query, user_id, component_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) GetWarehouseIdOfComponent(component_id int) (int, error) {
+	query := "SELECT warehouse_id FROM components WHERE id = $1"
+	var warehouse_id int
+	err := q.db.QueryRow(query, component_id).Scan(&warehouse_id)
+	if err != nil {
+		return -1, err
+	}
+	return warehouse_id, nil
 }
