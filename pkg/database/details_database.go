@@ -646,3 +646,20 @@ func (q *Query) GetWarehouseIdOfComponent(component_id int) (int, error) {
 	}
 	return warehouse_id, nil
 }
+
+func (q *Query) CheckIfUnitIDExists(unit_id, component_id, user_id int) (string, bool, error) {
+	query := "SELECT prefix FROM components WHERE id = $1 AND warehouse_id = $2"
+	var prefix string
+	err := q.db.QueryRow(query, component_id, user_id).Scan(&prefix)
+	if err != nil {
+		return "", false, err
+	}
+
+	query1 := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s_units WHERE unit_id = $1)", prefix)
+	var exists bool
+	err = q.db.QueryRow(query1, prefix).Scan(&exists)
+	if err != nil {
+		return "", false, err
+	}
+	return prefix, exists, nil
+}

@@ -653,3 +653,57 @@ func (wr *WarehouseRepo) GetAssignedUnits(e echo.Context) (int, []models.Assigne
 	return http.StatusOK, units, total, limit, page, nil
 
 }
+
+func (wr *WarehouseRepo) UpdateMaintenanceCost(e echo.Context) (int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var updateMaintenanceCostModel models.UpdateMaintenanceCostModel
+
+	err = e.Bind(&updateMaintenanceCostModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if updateMaintenanceCostModel.UnitID <= 0 {
+		log.Printf("invalid unit id")
+		return http.StatusBadRequest, fmt.Errorf("invalid unit id")
+	}
+
+	prefix, ok, err := query.CheckIfUnitIDExists(updateMaintenanceCostModel.UnitID, updateMaintenanceCostModel.ComponentID, claims.UserID)
+	if err != nil {
+		log.Printf("error while checking if component exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("component with id %v does not exist", updateMaintenanceCostModel.UnitID)
+		return http.StatusBadRequest, fmt.Errorf("component with id %v does not exist", updateMaintenanceCostModel.UnitID)
+	}
+
+	if updateMaintenanceCostModel.MaintenanceCost < 0 {
+		log.Printf("invalid maintenance cost")
+		return http.StatusBadRequest, fmt.Errorf("invalid maintenance cost")
+	}
+
+	status, err = query.UpdateMaintenanceCost(updateMaintenanceCostModel.UnitID, prefix, updateMaintenanceCostModel.MaintenanceCost)
+	if err != nil {
+		log.Printf("error while updating component name: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+
+}

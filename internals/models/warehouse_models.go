@@ -41,6 +41,7 @@ type WarehouseInterface interface {
 	UpdateIssueStatus(echo.Context) (int, error)
 	UpdateComponentName(echo.Context) (int, error)
 	GetAssignedUnits(echo.Context) (int, []AssignedUnitsModel, int, int, int, error)
+	UpdateMaintenanceCost(echo.Context) (int, error)
 }
 
 type GetAllIssuesModel struct {
@@ -52,4 +53,10 @@ type GetAllIssuesModel struct {
 
 type GetAllComponentUnitsModel struct {
 	ComponentID int `json:"component_id" validate:"required"`
+}
+
+type UpdateMaintenanceCostModel struct {
+	UnitID          int     `json:"unit_id" validate:"required"`
+	ComponentID     int     `json:"component_id" validate:"required"`
+	MaintenanceCost float32 `json:"maintenance_cost" validate:"required"`
 }

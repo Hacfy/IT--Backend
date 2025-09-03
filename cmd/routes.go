@@ -83,6 +83,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)
 	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)
 	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)
+	e.PUT("/warehouse/update/component/unit/maintainance", warehouseHandler.UpdateMaintenanceCostHandler)
 	// GET /warehouse/get/component/details
 	// POST /warehouse/update/component/unit/maintainance
 

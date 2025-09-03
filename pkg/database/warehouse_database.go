@@ -538,3 +538,18 @@ func (q *Query) GetAssignedUnits(prefix string, workspace_id, limit, offset int)
 
 	return units, total, nil
 }
+
+func (q *Query) UpdateMaintenanceCost(unit_id int, prefix string, cost float32) (int, error) {
+	query := fmt.Sprintf("UPDATE %s_units SET maintainance_cost = $1 WHERE id = $2", prefix)
+
+	if _, err := q.db.Exec(query, cost, unit_id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while updating component name: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+}

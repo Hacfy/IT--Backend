@@ -163,3 +163,14 @@ func (wh *WarehouseHandler) GetAssignedUnitsHandler(e echo.Context) error {
 		},
 	})
 }
+
+func (wh *WarehouseHandler) UpdateMaintenanceCostHandler(e echo.Context) error {
+	status, err := wh.WarehouseRepo.UpdateMaintenanceCost(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
