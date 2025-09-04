@@ -281,3 +281,149 @@ func (ar *AuthRepo) UserLogout(e echo.Context) (int, error) {
 	return http.StatusOK, nil
 
 }
+
+func (ar *AuthRepo) ForgotPassword(e echo.Context) (int, int64, error) {
+
+	var req_user models.ForgotPasswordModel
+
+	if err := e.Bind(&req_user); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, -1, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(req_user); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, -1, fmt.Errorf("failded to validate request")
+	}
+
+	query := database.NewDBinstance(ar.db)
+
+	_, ok, err := query.GetUserType(req_user.Email)
+	if err != nil {
+		log.Printf("Error checking user type: %v", err)
+		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user type")
+		return http.StatusUnauthorized, -1, fmt.Errorf("invalid user credentials")
+	}
+
+	otp, err := utils.GenerateOtp()
+	if err != nil {
+		log.Printf("error while generating otp: %v", err)
+		return http.StatusInternalServerError, -1, fmt.Errorf("failed to generate otp, please try again later")
+	}
+
+	Time := time.Now().Local().Unix()
+
+	if err := query.SetOtp(req_user.Email, otp, Time); err != nil {
+		log.Printf("error while storing otp: %v", err)
+		return http.StatusInternalServerError, -1, fmt.Errorf("failed to store otp, please try again later")
+	}
+
+	if err := utils.SendForgotPasswordEmail(req_user.Email, otp); err != nil {
+		log.Printf("error while sending forgot password email: %v", err)
+		return http.StatusInternalServerError, -1, fmt.Errorf("failed to send forgot password email, please try again later")
+	}
+
+	go func() {
+		log.Println("waiting for 5 minutes")
+		time.Sleep(time.Minute * 5)
+		query.DeleteOtp(req_user.Email, Time)
+		log.Println("otp deleted")
+	}()
+
+	return http.StatusOK, Time, nil
+}
+
+func (ar *AuthRepo) VerifyForgotPasswordRequest(e echo.Context) (int, error) {
+	var req_user models.VerifyForgotPasswordRequestModel
+
+	if err := e.Bind(&req_user); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(req_user); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failded to validate request")
+	}
+
+	query := database.NewDBinstance(ar.db)
+
+	ok, err := query.VerifyOtp(req_user.Email, req_user.Otp, req_user.Time)
+	if err != nil {
+		log.Printf("Error checking otp: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid otp")
+		return http.StatusUnauthorized, fmt.Errorf("invalid otp")
+	}
+
+	return http.StatusOK, nil
+}
+
+func (ar *AuthRepo) ResetPassword(e echo.Context) (int, string, string, string, error) {
+
+	var req_user models.ResetPasswordModel
+
+	if err := e.Bind(&req_user); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, "", "", "", fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(req_user); err != nil {
+		log.Printf("failed to validate request %v", err)
+		return http.StatusBadRequest, "", "", "", fmt.Errorf("failded to validate request")
+	}
+
+	if !utils.StrongPasswordValidator(req_user.Password) {
+		return http.StatusBadRequest, "", "", "", fmt.Errorf("invalid password")
+	}
+
+	hashPassword, err := utils.HashPassword(req_user.Password)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to hash password, please try again later")
+	}
+
+	query := database.NewDBinstance(ar.db)
+
+	UserType, ok, err := query.GetUserType(req_user.Email)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to get user type, please try again later")
+	} else if !ok {
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid user credentials")
+	}
+
+	status, err := query.ChangeUserPassword(hashPassword, req_user.Email, UserType)
+	if err != nil {
+		return status, "", "", "", fmt.Errorf("failed to change password, please try again later")
+	}
+
+	Time := time.Now().Local()
+
+	if err := query.UpdateUserTokenTimestamp(req_user.Email, Time); err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to update user token timestamp at the moment, please try again later")
+	}
+
+	time_unix := Time.Unix()
+
+	_, UserName, UserID, ok, err := query.GetUserPasswordID(req_user.Email, UserType)
+
+	accessToken, err := utils.GenerateUserToken(req_user.Email, UserType, UserName, UserID, time.Now().Local().Add(24*time.Hour).Unix(), time_unix)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to generate token, please try again later")
+	}
+
+	refreshToken, err := utils.GenerateUserToken(req_user.Email, UserType, UserName, UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), time_unix)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to generate token, please try again later")
+	}
+
+	token, err := utils.GenerateUserToken(req_user.Email, UserType, UserName, UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), time_unix)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to generate token, please try again later")
+	}
+
+	return http.StatusOK, accessToken, refreshToken, token, nil
+
+}

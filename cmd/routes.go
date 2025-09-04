@@ -34,12 +34,17 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/auth/login/users", authHandler.UserLoginHandler)
 	e.POST("/auth/logout/users", authHandler.UserLogoutHandler)
 	e.PUT("/auth/change/password", authHandler.ChangeUserPasswordHandler)
+	e.POST("/auth/reset/password", authHandler.ResetPasswordHandler)
+	e.POST("/auth/forgot/password", authHandler.ForgotPasswordHandler)
+	e.POST("/auth/verify/forgot/password", authHandler.VerifyForgotPasswordRequestHandler)
+	// FORGOT PASSWORD---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	organisatoinHandler := handlers.NewOrganisationHandler(repository.NewOrgRepo(db))
 
 	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)
 	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)
 	e.GET("/organisation/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)
+	//POST /organisation/reassign/superAdmin-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//GET /organisation/get/details
 
 	superAdminHandler := handlers.NewSuperAdminHandler(repository.NewSuperAdminRepo(db))
@@ -47,6 +52,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/superAdmin/create/branch", superAdminHandler.CreateBranchHandler)
 	e.PUT("/superAdmin/update/branchHead", superAdminHandler.UpdateBranchHeadHandler)
 	e.DELETE("/superAdmin/delete/branch", superAdminHandler.DeleteBranchHandler)
+	// POST /superAdmin/update/branch/superAdmin------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// GET /superAdmin/get/branch/details
 
 	branchHandler := handlers.NewBranchHandler(repository.NewBranchRepo(db))
@@ -85,7 +91,6 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)
 	e.PUT("/warehouse/update/component/unit/maintainance", warehouseHandler.UpdateMaintenanceCostHandler)
 	// GET /warehouse/get/component/details
-	// POST /warehouse/update/component/unit/maintainance
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 
@@ -95,7 +100,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.GET("/details/get/all/branches", detailsHandler.GetAllBranchesHandler)
 	e.GET("/details/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)
 	e.GET("/details/get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler)
-	// e.GET("/details/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllWarehouseOutOfWarentyUnitsHandler)
+	e.GET("/details/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler)
 
 	excelHandler := handlers.NewExcelHandler(repository.NewExcelRepo(db))
 

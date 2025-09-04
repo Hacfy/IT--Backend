@@ -98,7 +98,24 @@ func (db *DetailsHandler) GetAllWarehousesHandler(e echo.Context) error {
 }
 
 func (detailsHandler DetailsHandler) GetAllDepartmentOutOfWarentyUnitsHandler(e echo.Context) error {
-	status, OutOfWarentyUnits, total, Limit, Page, err := detailsHandler.DetailsRepo.GetAllOutOfWarehouseUnitsInDepartment(e)
+	status, OutOfWarentyUnits, total, Limit, Page, err := detailsHandler.DetailsRepo.GetAllOutOfWarentyUnitsInDepartment(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err)
+	}
+
+	return e.JSON(status, echo.Map{
+		"outOfWarentyUnits": OutOfWarentyUnits,
+		"meta": echo.Map{
+			"total": total,
+			"page":  Page,
+			"limit": Limit,
+			"pages": int(math.Ceil(float64(total) / float64(Limit))),
+		},
+	})
+}
+
+func (detailsHandler DetailsHandler) GetAllOutOfWarentyUnitsInWarehouseHandler(e echo.Context) error {
+	status, OutOfWarentyUnits, total, Limit, Page, err := detailsHandler.DetailsRepo.GetAllOutOfWarentyUnitsInWarehouse(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err)
 	}

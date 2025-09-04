@@ -63,6 +63,11 @@ func (db *Query) InitialiseDBqueries() error {
 			latest_token TIMESTAMPTZ,
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		)`,
+		`CREATE TABLE IF NOT EXISTS otps (
+			email VARCHAR(50) PRIMARY KEY,
+			otp VARCHAR(6) NOT NULL,
+			time TIMESTAMPTZ NOT NULL
+		)`,
 		`CREATE TABLE IF NOT EXISTS organisations (
 			id SERIAL PRIMARY KEY,
 			main_admin_id INTEGER NOT NULL,

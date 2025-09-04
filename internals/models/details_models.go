@@ -22,7 +22,8 @@ type DetailsInterface interface {
 	GetDepartmentWorkspaces(echo.Context) ([]DepartmentWorkspaceModel, int, int, int, int, error)
 	GetAllBranchesUnderSuperAdmin(echo.Context) ([]AllBranchesModel, int, int, int, int, error)
 	GetAllWarehouses(echo.Context) ([]AllWarehousesModel, int, error)
-	GetAllOutOfWarehouseUnitsInDepartment(echo.Context) (int, []AllOutOfWarentyUnitsModel, int, int, int, error)
+	GetAllOutOfWarentyUnitsInDepartment(echo.Context) (int, []AllOutOfWarentyUnitsModel, int, int, int, error)
+	GetAllOutOfWarentyUnitsInWarehouse(echo.Context) (int, []AllOutOfWarentyWarehouseModel, int, int, int, error)
 }
 
 type DepartmentWorkspaceModel struct {
@@ -79,4 +80,9 @@ type AllOutOfWarentyUnitsModel struct {
 	UnitID      int    `json:"unit_id"`
 	WarehouseID int    `json:"warehouse_id"`
 	ExpiredOn   string `json:"expired_on"`
+}
+
+type AllOutOfWarentyWarehouseModel struct {
+	UnitID    int    `json:"unit_id"`
+	ExpiredOn string `json:"expired_on"`
 }
