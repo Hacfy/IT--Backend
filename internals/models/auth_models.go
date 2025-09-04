@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -27,7 +29,7 @@ type UserInterface interface {
 	ChangeUserPassword(e echo.Context) (int, string, string, string, error)
 	UserLogout(e echo.Context) (int, error)
 	ResetPassword(e echo.Context) (int, string, string, string, error)
-	ForgotPassword(e echo.Context) (int, int64, error)
+	ForgotPassword(e echo.Context) (int, time.Time, error)
 	VerifyForgotPasswordRequest(e echo.Context) (int, error)
 }
 
@@ -48,9 +50,9 @@ type ForgotPasswordModel struct {
 }
 
 type VerifyForgotPasswordRequestModel struct {
-	Email string `json:"email" validate:"required,email"`
-	Otp   string `json:"otp" validate:"required"`
-	Time  int64  `json:"time" validate:"required"`
+	Email string    `json:"email" validate:"required,email"`
+	Otp   string    `json:"otp" validate:"required"`
+	Time  time.Time `json:"time" validate:"required"`
 }
 
 type ResetPasswordModel struct {

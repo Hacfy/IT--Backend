@@ -282,18 +282,18 @@ func (ar *AuthRepo) UserLogout(e echo.Context) (int, error) {
 
 }
 
-func (ar *AuthRepo) ForgotPassword(e echo.Context) (int, int64, error) {
+func (ar *AuthRepo) ForgotPassword(e echo.Context) (int, time.Time, error) {
 
 	var req_user models.ForgotPasswordModel
 
 	if err := e.Bind(&req_user); err != nil {
 		log.Printf("failed to decode request: %v", err)
-		return http.StatusBadRequest, -1, fmt.Errorf("invalid request format")
+		return http.StatusBadRequest, time.Time{}, fmt.Errorf("invalid request format")
 	}
 
 	if err := validate.Struct(req_user); err != nil {
 		log.Printf("failed to validate request %v", err)
-		return http.StatusBadRequest, -1, fmt.Errorf("failded to validate request")
+		return http.StatusBadRequest, time.Time{}, fmt.Errorf("failded to validate request")
 	}
 
 	query := database.NewDBinstance(ar.db)
@@ -301,34 +301,34 @@ func (ar *AuthRepo) ForgotPassword(e echo.Context) (int, int64, error) {
 	_, ok, err := query.GetUserType(req_user.Email)
 	if err != nil {
 		log.Printf("Error checking user type: %v", err)
-		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
+		return http.StatusInternalServerError, time.Time{}, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid user type")
-		return http.StatusUnauthorized, -1, fmt.Errorf("invalid user credentials")
+		return http.StatusUnauthorized, time.Time{}, fmt.Errorf("invalid user credentials")
 	}
 
 	otp, err := utils.GenerateOtp()
 	if err != nil {
 		log.Printf("error while generating otp: %v", err)
-		return http.StatusInternalServerError, -1, fmt.Errorf("failed to generate otp, please try again later")
+		return http.StatusInternalServerError, time.Time{}, fmt.Errorf("failed to generate otp, please try again later")
 	}
 
-	Time := time.Now().Local().Unix()
+	Time := time.Now().Local()
 
-	if err := query.SetOtp(req_user.Email, otp, Time); err != nil {
+	if err := query.SetOtp(req_user.Email, otp, Time.Unix()); err != nil {
 		log.Printf("error while storing otp: %v", err)
-		return http.StatusInternalServerError, -1, fmt.Errorf("failed to store otp, please try again later")
+		return http.StatusInternalServerError, time.Time{}, fmt.Errorf("failed to store otp, please try again later")
 	}
 
 	if err := utils.SendForgotPasswordEmail(req_user.Email, otp); err != nil {
 		log.Printf("error while sending forgot password email: %v", err)
-		return http.StatusInternalServerError, -1, fmt.Errorf("failed to send forgot password email, please try again later")
+		return http.StatusInternalServerError, time.Time{}, fmt.Errorf("failed to send forgot password email, please try again later")
 	}
 
 	go func() {
 		log.Println("waiting for 5 minutes")
 		time.Sleep(time.Minute * 5)
-		query.DeleteOtp(req_user.Email, Time)
+		query.DeleteOtp(req_user.Email, Time.Unix())
 		log.Println("otp deleted")
 	}()
 
@@ -350,7 +350,12 @@ func (ar *AuthRepo) VerifyForgotPasswordRequest(e echo.Context) (int, error) {
 
 	query := database.NewDBinstance(ar.db)
 
-	ok, err := query.VerifyOtp(req_user.Email, req_user.Otp, req_user.Time)
+	if time.Since(req_user.Time) > 5*time.Minute {
+		log.Printf("otp expired")
+		return http.StatusUnauthorized, fmt.Errorf("otp expired")
+	}
+
+	ok, err := query.VerifyOtp(req_user.Email, req_user.Otp, req_user.Time.Unix())
 	if err != nil {
 		log.Printf("Error checking otp: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
