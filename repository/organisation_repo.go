@@ -127,9 +127,9 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
 	}
 
-	if err := query.DeleteSuperAdmin(del_sa.SuperAdminEmail); err != nil {
+	if status, err := query.DeleteSuperAdmin(del_sa.SuperAdminEmail); err != nil {
 		log.Printf("error while deleting the user %v: %v", del_sa.SuperAdminEmail, err)
-		return http.StatusInternalServerError, fmt.Errorf("error while deleting superAdmin, please try again later")
+		return status, fmt.Errorf("error while deleting superAdmin, please try again later")
 	}
 
 	return http.StatusNoContent, nil
@@ -174,4 +174,53 @@ func (or *OrgRepo) GetAllSuperAdmins(e echo.Context) (int, []models.AllSuperAdmi
 
 	return http.StatusOK, superAdmins, nil
 
+}
+
+func (or *OrgRepo) ReassignSuperAdmin(e echo.Context) (int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(or.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var reassignSuperAdmin models.ReassignSuperAdminModel
+
+	err = e.Bind(&reassignSuperAdmin)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(reassignSuperAdmin); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	if err := query.CheckIfSuperAdminExists(reassignSuperAdmin.OldSuperAdminID, claims.UserID); err != nil {
+		log.Printf("error while checking if superAdmin exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if err := query.CheckIfSuperAdminExists(reassignSuperAdmin.NewSuperAdminID, claims.UserID); err != nil {
+		log.Printf("error while checking if superAdmin exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	status, err = query.ReassignSuperAdmin(reassignSuperAdmin, claims.UserID)
+	if err != nil {
+		log.Printf("error while reassigning superAdmin: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return status, nil
 }

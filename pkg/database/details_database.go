@@ -663,3 +663,13 @@ func (q *Query) CheckIfUnitIDExists(unit_id, component_id, user_id int) (string,
 	}
 	return prefix, exists, nil
 }
+
+func (q *Query) CheckIfSuperAdminExists(super_admin_id, user_id int) error {
+	query := "SELECT EXISTS(SELECT 1 FROM super_admins WHERE id = $1 AND org_id = $2)"
+	var exists bool
+	err := q.db.QueryRow(query, super_admin_id, user_id).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}

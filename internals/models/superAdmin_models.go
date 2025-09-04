@@ -54,3 +54,8 @@ type SuperAdminDetailsModel struct {
 	TotalUnitsOfComponents int    `json:"total_units_of_components"`
 	TotalNoOfIssues        int    `json:"total_no_of_issues"`
 }
+
+type ReassignSuperAdminModel struct {
+	OldSuperAdminID int `json:"old_super_admin_id" validate:"required"`
+	NewSuperAdminID int `json:"new_super_admin_id" validate:"required"`
+}

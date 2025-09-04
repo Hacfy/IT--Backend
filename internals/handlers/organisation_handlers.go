@@ -47,3 +47,14 @@ func (oh *OrganisationHandler) GetAllSuperAdminsHandler(e echo.Context) error {
 		"total":       len(superAdmins),
 	})
 }
+
+func (oh *OrganisationHandler) ReassignSuperAdminHandler(e echo.Context) error {
+	status, err := oh.OrgRepo.ReassignSuperAdmin(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}

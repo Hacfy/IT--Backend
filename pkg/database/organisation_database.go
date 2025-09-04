@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/models"
 )
@@ -40,8 +42,9 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 
 }
 
-func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
+func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 	var superAdminID, supersuperAdminOrgID int
+	query0 := "SELECT EXISTS(SELECT 1 FROM branches WHERE super_admin_id = $1)"
 	query1 := "DELETE FROM super_admins WHERE email = $1 RETURNING org_id, id"
 	query3 := "DELETE FROM users WHERE user_email = $1"
 	query2 := "INSERT INTO deleted_super_admins(super_admin_id, org_id, email) VALUES($1, $2, $3)"
@@ -49,7 +52,7 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return err
+		return http.StatusInternalServerError, err
 	}
 
 	defer func() {
@@ -61,19 +64,41 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) error {
 		}
 	}()
 
+	var exists bool
+
+	if err := tx.QueryRow(query0, superAdminID).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if exists {
+		return http.StatusNotAcceptable, fmt.Errorf("super_admin has branches associated with it")
+	}
+
 	if err := tx.QueryRow(query1, superAdminEmail).Scan(&supersuperAdminOrgID, &superAdminID); err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
 	if _, err := tx.Exec(query2, superAdminID, supersuperAdminOrgID, superAdminEmail); err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
 	if _, err := tx.Exec(query3, superAdminEmail); err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	return nil
+	return http.StatusNoContent, nil
 }
 
 func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsDetailsModel, error) {
@@ -126,6 +151,14 @@ func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsD
 	}
 
 	return superAdmins, nil
+}
+
+func (q *Query) ReassignSuperAdmin(superAdmin models.ReassignSuperAdminModel, org_id int) (int, error) {
+	query := "UPDATE branches SET super_admin_id = $1 WHERE org_id = $2 AND super_admin_id = $3"
+	if _, err := q.db.Exec(query, superAdmin.NewSuperAdminID, org_id, superAdmin.OldSuperAdminID); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusOK, nil
 }
 
 //query to get all the branches of a perticular organisation

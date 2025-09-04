@@ -413,6 +413,13 @@ func (ar *AuthRepo) ResetPassword(e echo.Context) (int, string, string, string, 
 	time_unix := Time.Unix()
 
 	_, UserName, UserID, ok, err := query.GetUserPasswordID(req_user.Email, UserType)
+	if err != nil {
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to get user details, please try again later")
+	}
+
+	if !ok {
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid user details")
+	}
 
 	accessToken, err := utils.GenerateUserToken(req_user.Email, UserType, UserName, UserID, time.Now().Local().Add(24*time.Hour).Unix(), time_unix)
 	if err != nil {

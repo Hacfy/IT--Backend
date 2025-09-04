@@ -34,6 +34,7 @@ type OrganisationInterface interface {
 	CreateSuperAdmin(echo.Context) (int, error)
 	DeleteSuperAdmin(echo.Context) (int, error)
 	GetAllSuperAdmins(echo.Context) (int, []AllSuperAdminsDetailsModel, error)
+	ReassignSuperAdmin(echo.Context) (int, error)
 }
 
 // type GetAllOrgDepartmentsModel struct {

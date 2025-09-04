@@ -701,9 +701,8 @@ func (wr *WarehouseRepo) UpdateMaintenanceCost(e echo.Context) (int, error) {
 	status, err = query.UpdateMaintenanceCost(updateMaintenanceCostModel.UnitID, prefix, updateMaintenanceCostModel.MaintenanceCost)
 	if err != nil {
 		log.Printf("error while updating component name: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("database error")
+		return status, fmt.Errorf("database error")
 	}
 
 	return http.StatusOK, nil
-
 }
