@@ -52,35 +52,9 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 }
 
 func (q *Query) DeleteBranch(branch models.DeleteBranchModel, superAdminID int) (int, error) {
-	var exists int
-	query1 := "SELECT 1 FROM branches WHERE super_admin_id = $1 AND branch_id = $2"
-	query2 := "DELETE FROM branches WHERE branch_id = $1"
-	query3 := "INSERT INTO deleted_branches(branch_id, super_admin_id) VALUES($1, $2)"
+	query1 := "CALL delete_branch($1, $2)"
 
-	tx, err := q.db.Begin()
-	if err != nil {
-		log.Printf("error while initialising DB: %v", err)
-		return http.StatusInternalServerError, err
-	}
-
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
-			log.Println("Initialised Database")
-		}
-	}()
-
-	if err := tx.QueryRow(query1, superAdminID, branch.BranchID).Scan(&exists); err != nil {
-		return http.StatusNotFound, err
-	}
-
-	if _, err := tx.Exec(query2, branch.BranchID); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if _, err := tx.Exec(query3, branch.BranchID, superAdminID); err != nil {
+	if _, err := q.db.Exec(query1, branch.BranchID, superAdminID); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
