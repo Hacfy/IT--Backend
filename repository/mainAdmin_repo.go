@@ -313,7 +313,7 @@ func (ma *MainAdminRepo) DeleteMainAdmin(e echo.Context) (int, error) {
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
 
-	status, err := query.DeleteMainAdmin(main_admin.MainAdminEmail)
+	status, err := query.DeleteMainAdmin(main_admin.MainAdminEmail, main_admin.MainAdminID, tokenModel.MainAdminID)
 	if err != nil {
 		log.Printf("error while deleting the main admin from database %v: %v", main_admin.MainAdminEmail, err)
 		return status, fmt.Errorf("error while deleting main admin")
@@ -379,7 +379,7 @@ func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
 
-	status, err := query.DeleteOrganisation(del_org.OrganisationEmail)
+	status, err := query.DeleteOrganisation(del_org.OrganisationEmail, del_org.OrganisationID, claims.MainAdminID)
 	if err != nil {
 		log.Printf("error while deleting the organisation %v: %v", del_org.OrganisationEmail, err)
 		return status, fmt.Errorf("error while deleting organisation, please try again later")

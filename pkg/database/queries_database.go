@@ -23,6 +23,12 @@ func (db *Query) InitialiseDBqueries() error {
 			main_admin_email VARCHAR(50) NOT NULL,
 			main_admin_password VARCHAR(256) NOT NULL
 		)`,
+		`CREATE TABLE IF NOT EXISTS deleted_main_admins (
+			id SERIAL PRIMARY KEY,
+			main_admin_id INTEGER NOT NULL,
+			main_admin_email VARCHAR(50) NOT NULL,
+			deleted_by INTEGER NOT NULL
+		)`,
 		`DO $$ 
 		BEGIN
 			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userlevel') THEN
@@ -86,7 +92,7 @@ func (db *Query) InitialiseDBqueries() error {
 			phone_number VARCHAR(10) NOT NULL,
 			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_organisations_main_admin_id FOREIGN KEY (main_admin_id) REFERENCES main_admin(main_admin_id) ON UPDATE CASCADE,
-			CONSTRAINT fk_organisations_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
+			CONSTRAINT fk_organisations_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS super_admins (
 			id SERIAL PRIMARY KEY,
@@ -94,7 +100,7 @@ func (db *Query) InitialiseDBqueries() error {
 			name VARCHAR(50) NOT NULL,
 			email VARCHAR(50) NOT NULL,
 			password VARCHAR(256) NOT NULL,
-			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON DELETE CASCADE,
+			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON DELETE CASCADE ON UPDATE CASCADE,
 			CONSTRAINT fk_super_admin_super_admin_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS branches (
@@ -103,8 +109,8 @@ func (db *Query) InitialiseDBqueries() error {
 			super_admin_id INTEGER NOT NULL,
 			branch_name VARCHAR(50) NOT NULL,
 			branch_location VARCHAR(500) NOT NULL,
-			CONSTRAINT fk_branch_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON UPDATE CASCADE,
-			CONSTRAINT fk_branch_super_admin_id FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON UPDATE CASCADE
+			CONSTRAINT fk_branch_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_branch_super_admin_id FOREIGN KEY (super_admin_id) REFERENCES super_admins(id) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS branch_heads (
 			id SERIAL PRIMARY KEY,
@@ -112,14 +118,14 @@ func (db *Query) InitialiseDBqueries() error {
 			name VARCHAR(50) NOT NULL,
 			email VARCHAR(50) NOT NULL,
 			password VARCHAR(256) NOT NULL,
-			CONSTRAINT fk_branch_heads_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON UPDATE CASCADE,
-			CONSTRAINT fk_branch_heads_email FOREIGN KEY (email) REFERENCES users(user_email) ON UPDATE CASCADE ON UPDATE CASCADE
+			CONSTRAINT fk_branch_heads_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_branch_heads_email FOREIGN KEY (email) REFERENCES users(user_email) ON UPDATE CASCADE ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS departments (
 			department_id SERIAL PRIMARY KEY,
 			branch_id INTEGER NOT NULL,
 			department_name VARCHAR(50) NOT NULL,
-			CONSTRAINT fk_department_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON UPDATE CASCADE
+			CONSTRAINT fk_department_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS department_heads (
 			id SERIAL PRIMARY KEY,
@@ -127,8 +133,8 @@ func (db *Query) InitialiseDBqueries() error {
 			name VARCHAR(50) NOT NULL,
 			email VARCHAR(50) NOT NULL,
 			password VARCHAR(256) NOT NULL,
-			CONSTRAINT fk_department_heads_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON UPDATE CASCADE,
-			CONSTRAINT fk_department_heads_email FOREIGN KEY (email) REFERENCES users(user_email) ON UPDATE CASCADE
+			CONSTRAINT fk_department_heads_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_department_heads_email FOREIGN KEY (email) REFERENCES users(user_email) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS deleted_super_admins (
 			id SERIAL PRIMARY KEY,
@@ -160,8 +166,8 @@ func (db *Query) InitialiseDBqueries() error {
 			email VARCHAR(50) NOT NULL,
 			password VARCHAR(256) NOT NULL,
 			branch_id INTEGER NOT NULL,
-			CONSTRAINT fk_warehouses_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON UPDATE CASCADE, 
-			CONSTRAINT fk_warehouses_email FOREIGN KEY (email) REFERENCES users(user_email) ON UPDATE CASCADE
+			CONSTRAINT fk_warehouses_branch_id FOREIGN KEY (branch_id) REFERENCES branches(branch_id) ON UPDATE CASCADE ON DELETE CASCADE, 
+			CONSTRAINT fk_warehouses_email FOREIGN KEY (email) REFERENCES users(user_email) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS deleted_department_heads (
 			id SERIAL PRIMARY KEY,
@@ -202,7 +208,7 @@ func (db *Query) InitialiseDBqueries() error {
 			prefix VARCHAR(3) NOT NULL UNIQUE,
 			warehouse_id INTEGER NOT NULL,
 			a_at TIMESTAMPTZ DEFAULT NOW(),
-			CONSTRAINT fk_component_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE
+			CONSTRAINT fk_component_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS deleted_components (
 			id SERIAL PRIMARY KEY,
@@ -222,9 +228,9 @@ func (db *Query) InitialiseDBqueries() error {
 			issue VARCHAR(100) NOT NULL,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			status issue_status DEFAULT 'raised',
-			CONSTRAINT fk_issues_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON UPDATE CASCADE,
-			CONSTRAINT fk_issues_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE,
-			CONSTRAINT fk_issues_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE
+			CONSTRAINT fk_issues_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_issues_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_issues_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS resolved_issues (
 			id SERIAL PRIMARY KEY,
@@ -233,8 +239,8 @@ func (db *Query) InitialiseDBqueries() error {
 			cost NUMERIC(10, 2) NOT NULL,
 			resolved_by INTEGER NOT NULL,
 			resolved_at TIMESTAMPTZ DEFAULT NOW(),
-			CONSTRAINT fk_resolved_issues_issue_id FOREIGN KEY (issue_id) REFERENCES issues(id) ON UPDATE CASCADE,
-			CONSTRAINT fk_resolved_issues_resolved_by FOREIGN KEY (resolved_by) REFERENCES warehouses(id) ON UPDATE CASCADE
+			CONSTRAINT fk_resolved_issues_issue_id FOREIGN KEY (issue_id) REFERENCES issues(id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_resolved_issues_resolved_by FOREIGN KEY (resolved_by) REFERENCES warehouses(id) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
 		`CREATE TABLE IF NOT EXISTS deleted_units_assigned (
 			id SERIAL PRIMARY KEY,
@@ -265,10 +271,10 @@ func (db *Query) InitialiseDBqueries() error {
 			created_by INTEGER NOT NULL,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			status request_status DEFAULT 'pending',
-			CONSTRAINT fk_requests_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON UPDATE CASCADE,
-			CONSTRAINT fk_requests_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE,
-			CONSTRAINT fk_requests_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE,
-			CONSTRAINT fk_requests_component_id FOREIGN KEY (component_id) REFERENCES components(id) ON UPDATE CASCADE
+			CONSTRAINT fk_requests_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_requests_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_requests_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE ON DELETE CASCADE,
+			CONSTRAINT fk_requests_component_id FOREIGN KEY (component_id) REFERENCES components(id) ON UPDATE CASCADE ON DELETE CASCADE
 		`,
 	}
 

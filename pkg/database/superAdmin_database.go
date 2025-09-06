@@ -54,7 +54,22 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 func (q *Query) DeleteBranch(branch models.DeleteBranchModel, superAdminID int) (int, error) {
 	query1 := "CALL delete_branch($1, $2)"
 
-	if _, err := q.db.Exec(query1, branch.BranchID, superAdminID); err != nil {
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if _, err := tx.Exec(query1, branch.BranchID, superAdminID); err != nil {
 		return http.StatusInternalServerError, err
 	}
 

@@ -21,6 +21,7 @@ type CreateOrganisationModel struct {
 type DeleteOrganisationModel struct {
 	OrganisationEmail          string `json:"organisation_email" validate:"required,email"`
 	DeleteOrganisationPassword string `json:"delete_organisation_password" validate:"required"`
+	OrganisationID             int    `json:"organisation_id" validate:"required"`
 }
 
 type GetAllOrganisationsModel struct {

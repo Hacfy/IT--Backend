@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -78,25 +79,121 @@ func (q *Query) GetMainAdminCredentials(main_admin_email string) (models.MainAdm
 	}, true, nil
 }
 
-func (q *Query) DeleteMainAdmin(mainAdminEmail string) (int, error) {
-	query := "DELETE FROM main_admin WHERE main_admin_email = $1"
-	if _, err := q.db.Exec(query, mainAdminEmail); err != nil {
-		if err == sql.ErrNoRows {
-			return http.StatusNotFound, err
-		}
+func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by int) (int, error) {
+	query0 := "SELECT EXISTS(SELECT 1 FROM organisations "
+	query1 := "DELETE FROM main_admin WHERE main_admin_email = $1"
+	query2 := "INSERT INTO deleted_main_admins(main_admin_id, email, deleted_by) VALUES($1, $2, $3)"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
 		return http.StatusInternalServerError, err
 	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	var exists bool
+
+	if err := tx.QueryRow(query0, main_admin_id).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if exists {
+		return http.StatusConflict, fmt.Errorf("main_admin has organisations associated with them")
+	}
+
+	if _, err := tx.Exec(query1, mainAdminEmail); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if _, err := tx.Exec(query2, main_admin_id, mainAdminEmail, deleted_by); err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
 	return http.StatusNoContent, nil
+
 }
 
-func (q *Query) DeleteOrganisation(organisationEmail string) (int, error) {
-	query := "DELETE FROM organisations WHERE email = $1"
-	if _, err := q.db.Exec(query, organisationEmail); err != nil {
-		if err == sql.ErrNoRows {
-			return http.StatusNotFound, err
-		}
+func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, deleted_by int) (int, error) {
+	query1 := "SELECT EXISTS(SELECT 1 FROM super_admins WHERE org_id = $1)"
+	query2 := "INSERT INTO deleted_organisations(org_id, email, main_admin_id) VALUES($1, $2, $3)"
+	query3 := "DELETE FROM organisations WHERE email = $1"
+	query4 := "DELETE FROM users WHERE user_email = $1 RETRUNING user_email, user_level, ever_logged_in, latest_token, created_at"
+	query5 := "INSERT INTO deleted_users(user_email, user_level, ever_logged_in, latest_token, created_at, deleted_by)"
+
+	var org_email string
+	var org_level string
+	var super_admin_exists bool
+	var ever_logged_in bool
+	var latest_token string
+	var created_at int64
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
 		return http.StatusInternalServerError, err
 	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if err := tx.QueryRow(query1, organisationEmail).Scan(&super_admin_exists); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if super_admin_exists {
+		return http.StatusConflict, fmt.Errorf("super_admin has branches associated with it")
+	}
+	if err := tx.QueryRow(query2, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if _, err := tx.Exec(query3, organisationEmail); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if err := tx.QueryRow(query4, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if err := tx.QueryRow(query5, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
 	return http.StatusNoContent, nil
 }
 

@@ -93,11 +93,26 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 func (q *Query) DeleteComponent(del_component models.DeleteComponentModel, warehouse_id int) (int, error) {
 	query1 := "CALL delete_component($1, $2)"
 
-	if _, err := q.db.Exec(query1, del_component.ComponentID, warehouse_id); err != nil {
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if _, err := tx.Exec(query1, del_component.ComponentID, warehouse_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
-		return http.StatusInternalServerError, fmt.Errorf("database error")
+		return http.StatusInternalServerError, err
 	}
 	return http.StatusNoContent, nil
 }

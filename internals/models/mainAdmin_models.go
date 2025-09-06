@@ -23,6 +23,7 @@ type LoginMainAdminModel struct {
 
 type DeleteMainAdminModel struct {
 	MainAdminEmail  string `json:"main_admin_email" validate:"required,email"`
+	MainAdminID     int    `json:"main_admin_id" validate:"required"`
 	CompanyPassword string `json:"company_password" validate:"required"`
 }
 

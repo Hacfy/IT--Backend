@@ -74,7 +74,7 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 	}
 
 	if exists {
-		return http.StatusNotAcceptable, fmt.Errorf("super_admin has branches associated with it")
+		return http.StatusConflict, fmt.Errorf("super_admin has branches associated with it")
 	}
 
 	if err := tx.QueryRow(query1, superAdminEmail).Scan(&supersuperAdminOrgID, &superAdminID); err != nil {

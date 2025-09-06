@@ -43,7 +43,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)
 	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)
 	e.GET("/organisation/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)
-	e.POST("/organisation/reassign/superAdmin", organisatoinHandler.ReassignSuperAdminHandler)
+	e.POST("/organisation/reassign/superAdmin/branches", organisatoinHandler.ReassignSuperAdminHandler)
 	//GET /organisation/get/details
 
 	superAdminHandler := handlers.NewSuperAdminHandler(repository.NewSuperAdminRepo(db))
