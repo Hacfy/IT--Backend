@@ -317,6 +317,20 @@ func (br *BranchRepo) DeleteDepartment(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
 	}
 
+	UserPassword, _, _, ok, err := query.GetUserPasswordID(claims.UserEmail, claims.UserType)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	if err := utils.CheckPassword(department.BranchHeadPassword, UserPassword); err != nil {
+		log.Printf("wrong password %v: %v", department.BranchHeadPassword, err)
+		return http.StatusBadRequest, fmt.Errorf("invalid user details")
+	}
+
 	ok, err = query.CheckIfDepartmentUnderBranchHead(department.DepartmentID, claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)

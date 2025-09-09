@@ -39,7 +39,8 @@ type GetDepartmentWorkspacesModel struct {
 }
 
 type DeleteDepartmentModel struct {
-	DepartmentID int `json:"department_id" validate:"required"`
+	DepartmentID       int    `json:"department_id" validate:"required"`
+	BranchHeadPassword string `json:"branch_head_password" validate:"required"`
 }
 
 type AllRequestsModel struct {
