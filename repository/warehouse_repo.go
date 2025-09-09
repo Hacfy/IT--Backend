@@ -532,8 +532,13 @@ func (wr *WarehouseRepo) UpdateIssueStatus(e echo.Context) (int, error) {
 		log.Printf("invalid issue id")
 		return http.StatusBadRequest, fmt.Errorf("invalid issue id")
 	}
+	validStatuses := map[string]bool{
+		"accepted": true,
+		"resolved": true,
+		"raised":   true,
+	}
 
-	if updateIssueStatusModel.Status == "accepted" || updateIssueStatusModel.Status == "resolved" || updateIssueStatusModel.Status == "raised" {
+	if !validStatuses[updateIssueStatusModel.Status] {
 		log.Printf("invalid issue status")
 		return http.StatusBadRequest, fmt.Errorf("invalid issue status")
 	}

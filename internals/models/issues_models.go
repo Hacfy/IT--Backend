@@ -44,3 +44,7 @@ type UpdateIssueStatusModel struct {
 	IssueID int    `json:"issue_id" validate:"required"`
 	Status  string `json:"status" validate:"required"`
 }
+
+type DeleteIssueModel struct {
+	IssueID int `json:"issue_id" validate:"required"`
+}

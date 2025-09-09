@@ -231,3 +231,84 @@ func (q *Query) GetRequestDetails(getRequestDetails models.GetRequestDetailsMode
 
 	return Request, nil
 }
+
+func (q *Query) DeleteIssue(issue int, userID int) (int, error) {
+	query1 := "DELETE FROM issues WHERE id = $1 RETURNING id, department_id, workspace_id, unit_id, unit_prefix, issue, created_at, status"
+	query2 := "INSERT INTO deleted_issues(issue_id, department_id, workspace_id, unit_id, unit_prefix, issue, created_at, status, deleted_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	var issue_id int
+	var department_id int
+	var workspace_id int
+	var unit_id int
+	var unit_prefix string
+	var Issue string
+	var created_at int64
+	var status string
+
+	if err := tx.QueryRow(query1, issue).Scan(&issue_id, &department_id, &workspace_id, &unit_id, &unit_prefix, &Issue, &created_at, &status); err != nil {
+		if err == sql.ErrNoRows {
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		return http.StatusInternalServerError, err
+	}
+
+	if _, err := tx.Exec(query2, issue_id, department_id, workspace_id, unit_id, unit_prefix, Issue, created_at, status, userID); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusNoContent, nil
+}
+
+func (q *Query) CheckIfIssueIDExistsUnderDepartment(issueID, departmentID int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM issues WHERE id = $1 AND department_id = $2)"
+	var exists bool
+	err := q.db.QueryRow(query, issueID, departmentID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) GetDepartmentID(userID int) (int, error) {
+	query := "SELECT department_id FROM department_heads WHERE id = $1"
+	var departmentID int
+	err := q.db.QueryRow(query, userID).Scan(&departmentID)
+	if err != nil {
+		return -1, err
+	}
+	return departmentID, nil
+}
+
+func (q *Query) CheckIfRequestIDExistsUnderDepartment(requestID, departmentID int) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM requests WHERE id = $1 AND department_id = $2)"
+	var exists bool
+	err := q.db.QueryRow(query, requestID, departmentID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
+func (q *Query) DeleteRequest(requestID, departmentID int) (int, error) {
+	query := "DELETE FROM requests WHERE id = $1 AND department_id = $2"
+	_, err := q.db.Exec(query, requestID, departmentID)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return http.StatusNoContent, nil
+}

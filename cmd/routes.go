@@ -66,24 +66,26 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	departmentHandler := handlers.NewDepartmentHandler(repository.NewDepartmentRepo(db))
 
-	e.POST("/department/create/workspace", departmentHandler.CreateWorkspaceHandler)   //
-	e.DELETE("/department/delete/workspace", departmentHandler.DeleteWorkspaceHandler) //
-	e.POST("/department/raise/issue", departmentHandler.RaiseIssueHandler)             //
-	e.POST("/department/request/new/units", departmentHandler.RequestNewUnitsHandler)  //
-	e.GET("/department/get/all/requests", departmentHandler.GetAllDepartmentRequestsHandler)
-	e.GET("/department/get/request/details", departmentHandler.GetDepartmentRequestDetailsHandler)
+	e.POST("/department/create/workspace", departmentHandler.CreateWorkspaceHandler)               //
+	e.DELETE("/department/delete/workspace", departmentHandler.DeleteWorkspaceHandler)             //
+	e.POST("/department/raise/issue", departmentHandler.RaiseIssueHandler)                         //
+	e.POST("/department/request/new/units", departmentHandler.RequestNewUnitsHandler)              //
+	e.GET("/department/get/all/requests", departmentHandler.GetAllDepartmentRequestsHandler)       //
+	e.GET("/department/get/request/details", departmentHandler.GetDepartmentRequestDetailsHandler) //
+	e.DELETE("/department/delete/request", departmentHandler.DeleteRequestHandler)
+	e.DELETE("/department/delete/issue", departmentHandler.DeleteIssueHandler)
 
 	warehouseHandler := handlers.NewWarehouse_Handler(repository.NewWarehouseRepo(db))
 
-	e.POST("/warehouse/create/component", warehouseHandler.CreateComponentHandler)
-	e.DELETE("/warehouse/delete/component", warehouseHandler.DeleteComponentHandler)
-	e.POST("/warehouse/add/component/units", warehouseHandler.AddComponentUnitsHandler)
-	e.PATCH("/warehouse/assign/units", warehouseHandler.AssignUnitsHandler)
-	e.GET("/warehouse/get/all/issues", warehouseHandler.GetAllIssuesHandler)
-	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)
-	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler)
-	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)
-	e.GET("/warehouse/get/unit/history", warehouseHandler.GetUnitAssignmentHistoryHandler)
+	e.POST("/warehouse/create/component", warehouseHandler.CreateComponentHandler)                     //
+	e.DELETE("/warehouse/delete/component", warehouseHandler.DeleteComponentHandler)                   //
+	e.POST("/warehouse/add/component/units", warehouseHandler.AddComponentUnitsHandler)                //
+	e.PATCH("/warehouse/assign/units", warehouseHandler.AssignUnitsHandler)                            //
+	e.GET("/warehouse/get/all/issues", warehouseHandler.GetAllIssuesHandler)                           //
+	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)          //
+	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler) //
+	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)                     //
+	e.GET("/warehouse/get/unit/history", warehouseHandler.GetUnitAssignmentHistoryHandler)             //
 	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)
 	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)
 	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)

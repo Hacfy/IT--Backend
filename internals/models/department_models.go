@@ -28,6 +28,8 @@ type DepartmentInterface interface {
 	RequestNewUnits(echo.Context) (int, map[int]int, error)
 	GetAllDepartmentRequests(echo.Context) (int, []AllRequestsModel, error)
 	GetDepartmentRequestDetails(echo.Context) (int, RequestDetailsModel, error)
+	DeleteRequest(echo.Context) (int, error)
+	DeleteIssue(echo.Context) (int, error)
 }
 
 type GetDepartmentIssuesModel struct {
@@ -82,4 +84,8 @@ type RequestDetailsModel struct {
 type GetRequestDetailsModel struct {
 	RequestID    int `json:"request_id" validate:"required"`
 	DepartmentID int `json:"department_id" validate:"required"`
+}
+
+type DeleteRequestModel struct {
+	RequestID int `json:"request_id" validate:"required"`
 }

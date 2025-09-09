@@ -81,3 +81,23 @@ func (dh *DepartmentHandler) GetDepartmentRequestDetailsHandler(e echo.Context) 
 		"request": request,
 	})
 }
+
+func (dh *DepartmentHandler) DeleteRequestHandler(e echo.Context) error {
+	status, err := dh.DepartmentRepo.DeleteRequest(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (dh *DepartmentHandler) DeleteIssueHandler(e echo.Context) error {
+	status, err := dh.DepartmentRepo.DeleteIssue(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
