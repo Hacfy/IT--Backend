@@ -128,7 +128,7 @@ func (ma *MainAdminRepo) LoginMainAdmin(e echo.Context) (int, string, string, st
 	accessToken, err := utils.GenerateCookieToken(db_ma.MainAdminEmail, "main_admin", db_ma.MainAdminID, time.Now().Local().Add(24*time.Hour).Unix(), DB_iat)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", db_ma.MainAdminEmail, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("error while generating token for user %s: %v", db_ma.MainAdminEmail, err)
 	}
 
 	refreshToken, err := utils.GenerateCookieToken(db_ma.MainAdminEmail, "main_admin", db_ma.MainAdminID, time.Now().Local().Add(7*24*time.Hour).Unix(), DB_iat)

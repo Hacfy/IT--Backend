@@ -21,46 +21,46 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	mainAdminHandler := handlers.NewMainAdmin_Handler(repository.NewMainAdminRepo(db))
 
-	e.POST("/main_admin/register", mainAdminHandler.CreateMainAdminHandler)
-	e.POST("/main_admin/login", mainAdminHandler.LoginMainAdminHandler)
-	e.DELETE("/main_admin/delete/main_admin", mainAdminHandler.DeleteMainAdminHandler)
-	e.POST("/main_admin/create/organisation", mainAdminHandler.CreateOrganisationHandler)
-	e.DELETE("/main_admin/delete/organisation", mainAdminHandler.DeleteOrganisationHandler)
-	e.GET("/main_admin/get/all/organisations", mainAdminHandler.GetAllOrganisationsHandler)
-	e.GET("/main_admin/get/all/main_admins", mainAdminHandler.GetAllMainAdminsHandler)
+	e.POST("/main_admin/register", mainAdminHandler.CreateMainAdminHandler)                 //
+	e.POST("/main_admin/login", mainAdminHandler.LoginMainAdminHandler)                     //
+	e.DELETE("/main_admin/delete/main_admin", mainAdminHandler.DeleteMainAdminHandler)      //
+	e.POST("/main_admin/create/organisation", mainAdminHandler.CreateOrganisationHandler)   //
+	e.DELETE("/main_admin/delete/organisation", mainAdminHandler.DeleteOrganisationHandler) //
+	e.GET("/main_admin/get/all/organisations", mainAdminHandler.GetAllOrganisationsHandler) //
+	e.GET("/main_admin/get/all/main_admins", mainAdminHandler.GetAllMainAdminsHandler)      //
 
 	authHandler := handlers.NewAuthHandler(repository.NewAuthRepo(db))
 
-	e.POST("/auth/login/users", authHandler.UserLoginHandler)
-	e.POST("/auth/logout/users", authHandler.UserLogoutHandler)
-	e.PUT("/auth/change/password", authHandler.ChangeUserPasswordHandler)
-	e.POST("/auth/reset/password", authHandler.ResetPasswordHandler)
-	e.POST("/auth/forgot/password", authHandler.ForgotPasswordHandler)
-	e.POST("/auth/verify/forgot/password", authHandler.VerifyForgotPasswordRequestHandler)
+	e.POST("/auth/login/users", authHandler.UserLoginHandler)                              //
+	e.POST("/auth/logout/users", authHandler.UserLogoutHandler)                            //
+	e.PUT("/auth/change/password", authHandler.ChangeUserPasswordHandler)                  //
+	e.POST("/auth/reset/password", authHandler.ResetPasswordHandler)                       //
+	e.POST("/auth/forgot/password", authHandler.ForgotPasswordHandler)                     //
+	e.POST("/auth/verify/forgot/password", authHandler.VerifyForgotPasswordRequestHandler) //
 
 	organisatoinHandler := handlers.NewOrganisationHandler(repository.NewOrgRepo(db))
 
-	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)
-	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)
-	e.GET("/organisation/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)
-	e.POST("/organisation/reassign/superAdmin/branches", organisatoinHandler.ReassignSuperAdminHandler)
+	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)              //
+	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)            //
+	e.GET("/organisation/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)            //
+	e.POST("/organisation/reassign/superAdmin/branches", organisatoinHandler.ReassignSuperAdminHandler) //
 	//GET /organisation/get/details
 
 	superAdminHandler := handlers.NewSuperAdminHandler(repository.NewSuperAdminRepo(db))
 
-	e.POST("/superAdmin/create/branch", superAdminHandler.CreateBranchHandler)
-	e.PUT("/superAdmin/update/branchHead", superAdminHandler.UpdateBranchHeadHandler)
-	e.DELETE("/superAdmin/delete/branch", superAdminHandler.DeleteBranchHandler)
+	e.POST("/superAdmin/create/branch", superAdminHandler.CreateBranchHandler)        //
+	e.PUT("/superAdmin/update/branchHead", superAdminHandler.UpdateBranchHeadHandler) //
+	e.DELETE("/superAdmin/delete/branch", superAdminHandler.DeleteBranchHandler)      //
 	// GET /superAdmin/get/branch/details
 
 	branchHandler := handlers.NewBranchHandler(repository.NewBranchRepo(db))
 
-	e.POST("/branch/create/department", branchHandler.CreateDepartmentHandler)
-	e.PUT("/branch/update/departmentHead", branchHandler.UpdateDepartmentHeadHandler)
-	e.POST("/branch/create/warehouse", branchHandler.CreateWarehouseHandler)
-	e.PUT("/branch/update/warehouseHead", branchHandler.UpdateWarehouseHeadHandler)
-	e.DELETE("/branch/delete/department", branchHandler.DeleteDepartmentHandler)
-	e.DELETE("/branch/delete/warehouse", branchHandler.DeleteWarehouseHandler)
+	e.POST("/branch/create/department", branchHandler.CreateDepartmentHandler)        //
+	e.PUT("/branch/update/departmentHead", branchHandler.UpdateDepartmentHeadHandler) //
+	e.POST("/branch/create/warehouse", branchHandler.CreateWarehouseHandler)          //
+	e.PUT("/branch/update/warehouseHead", branchHandler.UpdateWarehouseHeadHandler)   //
+	e.DELETE("/branch/delete/department", branchHandler.DeleteDepartmentHandler)      //
+	e.DELETE("/branch/delete/warehouse", branchHandler.DeleteWarehouseHandler)        //
 	// GET /branch/get/department/details
 	// GET /branch/get/warehouse/details
 

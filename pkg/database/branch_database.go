@@ -87,7 +87,7 @@ func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHea
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	return 0, nil
+	return http.StatusCreated, nil
 }
 
 func (q *Query) UpdateDepartmentHead(department_head models.UpdateDepartmentHeadModel, branch_head_id int, password string) (int, error) {
@@ -193,7 +193,7 @@ func (q *Query) DeleteDepartment(department_id, deleted_by int) (int, error) {
 		return http.StatusInternalServerError, err
 	}
 
-	return http.StatusOK, nil
+	return http.StatusNoContent, nil
 }
 
 func (q *Query) DeleteWarehouse(warehouse_id, deleted_by int) (int, error) {
@@ -204,5 +204,5 @@ func (q *Query) DeleteWarehouse(warehouse_id, deleted_by int) (int, error) {
 		return http.StatusInternalServerError, err
 	}
 
-	return http.StatusOK, nil
+	return http.StatusNoContent, nil
 }

@@ -84,19 +84,19 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 	accessToken, err := utils.GenerateCookieToken(req_user.Email, userType, db_id, time.Now().Local().Add(24*time.Hour).Unix(), token_unix)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
 	}
 
 	refreshToken, err := utils.GenerateCookieToken(req_user.Email, userType, db_id, time.Now().Local().Add(7*24*time.Hour).Unix(), token_unix)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
 	}
 
 	token, err := utils.GenerateUserToken(req_user.Email, userType, db_name, db_id, time.Now().Local().Add(7*24*time.Hour).Unix(), token_unix)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
 	}
 
 	return http.StatusOK, accessToken, refreshToken, token, nil
@@ -184,19 +184,19 @@ func (ar *AuthRepo) ChangeUserPassword(e echo.Context) (int, string, string, str
 	accessToken, err := utils.GenerateCookieToken(claims.UserEmail, claims.UserType, claims.UserID, time.Now().Local().Add(24*time.Hour).Unix(), token_unix)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", claims.UserEmail, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
 	}
 
 	refreshToken, err := utils.GenerateCookieToken(claims.UserEmail, claims.UserType, claims.UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), token_unix)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", claims.UserEmail, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
 	}
 
 	Token, err := utils.GenerateUserToken(claims.UserEmail, claims.UserType, claims.UserName, claims.UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), token_unix)
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", claims.UserEmail, err)
-		return http.StatusInternalServerError, "", "", "", err
+		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
 	}
 
 	return http.StatusOK, accessToken, refreshToken, Token, nil

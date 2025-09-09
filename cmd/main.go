@@ -17,9 +17,10 @@ func main() {
 	}
 
 	db := NewDatabase()
-	log.Println("connected to db")
 	db.CheckStatus()
 	defer db.Close()
+	log.Println("Database Status Checked")
 
+	log.Println("Starting Server")
 	Start(db.db, addr)
 }

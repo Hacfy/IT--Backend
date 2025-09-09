@@ -125,10 +125,10 @@ func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsD
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no superAdmins found for organisation %v", organisation_id)
-			return nil, err
+			return nil, fmt.Errorf("no superAdmins found for organisation %v", organisation_id)
 		}
 		log.Printf("error while querying data: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error while querying data")
 	}
 	defer rows.Close()
 
@@ -136,14 +136,14 @@ func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsD
 		var superAdmin models.AllSuperAdminsDetailsModel
 		if err := rows.Scan(&superAdmin.SuperAdminID, &superAdmin.SuperAdminName, &superAdmin.SuperAdminEmail); err != nil {
 			log.Printf("error while scanning data: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("error while scanning data")
 		}
 
 		var superAdminBranches int
 		err = tx.QueryRow(query2, superAdmin.SuperAdminID).Scan(&superAdminBranches)
 		if err != nil {
 			log.Printf("error while scanning data: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("error while scanning data")
 		}
 
 		superAdmin.NoOfBranches = superAdminBranches

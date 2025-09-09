@@ -97,7 +97,6 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 	return http.StatusCreated, nil
 }
 
-// should be completed
 func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
 	if err != nil {
@@ -129,7 +128,7 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 
 	if status, err := query.DeleteSuperAdmin(del_sa.SuperAdminEmail); err != nil {
 		log.Printf("error while deleting the user %v: %v", del_sa.SuperAdminEmail, err)
-		return status, fmt.Errorf("error while deleting superAdmin, please try again later")
+		return status, fmt.Errorf("error while deleting superAdmin, please try again later \n %v", err)
 	}
 
 	return http.StatusNoContent, nil
@@ -169,7 +168,7 @@ func (or *OrgRepo) GetAllSuperAdmins(e echo.Context) (int, []models.AllSuperAdmi
 	superAdmins, err := query.GetAllSuperAdmins(getAllSuperAdmins.OrganisationID)
 	if err != nil {
 		log.Printf("error while fetching superAdmins: %v", err)
-		return http.StatusInternalServerError, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("database error")
+		return http.StatusInternalServerError, []models.AllSuperAdminsDetailsModel{}, err
 	}
 
 	return http.StatusOK, superAdmins, nil
