@@ -62,6 +62,16 @@ func (db *Query) InitialiseDBqueries() error {
 				);
 			END IF;
 		END $$;`,
+		`DO $$ 
+		BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'request_status') THEN
+				CREATE TYPE request_status AS ENUM (
+					'raised',
+					'accepted',
+					'declined'
+				);
+			END IF;
+		END $$;`,
 		`CREATE TABLE IF NOT EXISTS users (
 			user_email VARCHAR(50) PRIMARY KEY,
 			user_level userLevel NOT NULL,
@@ -270,7 +280,7 @@ func (db *Query) InitialiseDBqueries() error {
 			prefix VARCHAR(3) NOT NULL,
 			created_by INTEGER NOT NULL,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
-			status issue_status DEFAULT 'raised',
+			status request_status DEFAULT 'raised',
 			CONSTRAINT fk_requests_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON UPDATE CASCADE ON DELETE CASCADE,
 			CONSTRAINT fk_requests_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE,
 			CONSTRAINT fk_requests_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON UPDATE CASCADE ON DELETE CASCADE,

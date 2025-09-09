@@ -195,7 +195,7 @@ func (dr *DepartmentRepo) RequestNewUnits(e echo.Context) (int, map[int]int, err
 		RequestIDs[Key] = requestID
 	}
 
-	return Status, RequestIDs, nil
+	return http.StatusCreated, RequestIDs, nil
 }
 
 func (dr *DepartmentRepo) GetAllDepartmentRequests(e echo.Context) (int, []models.AllRequestsModel, error) {
