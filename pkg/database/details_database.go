@@ -673,3 +673,13 @@ func (q *Query) CheckIfSuperAdminExists(super_admin_id, user_id int) error {
 	}
 	return nil
 }
+
+func (q *Query) CheckIfUnitExists(unit_id int, prefix string, user_id int) (bool, error) {
+	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s_units WHERE id = $1 AND warehouse_id = $2)", prefix)
+	var exists bool
+	err := q.db.QueryRow(query, unit_id, user_id).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}

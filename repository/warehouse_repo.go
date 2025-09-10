@@ -711,3 +711,107 @@ func (wr *WarehouseRepo) UpdateMaintenanceCost(e echo.Context) (int, error) {
 
 	return http.StatusOK, nil
 }
+
+func (wr *WarehouseRepo) UpdateUnitStatus(e echo.Context) (int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var updateUnitStatusModel models.UpdateUnitStatusModel
+
+	err = e.Bind(&updateUnitStatusModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(updateUnitStatusModel); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	if updateUnitStatusModel.UnitID <= 0 {
+		log.Printf("invalid unit id")
+		return http.StatusBadRequest, fmt.Errorf("invalid unit id")
+	}
+
+	if exists, err := query.CheckIfUnitExists(updateUnitStatusModel.UnitID, updateUnitStatusModel.Prefix, claims.UserID); err != nil {
+		log.Printf("error while checking if unit exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !exists {
+		log.Printf("unit with id %v does not exist", updateUnitStatusModel.UnitID)
+		return http.StatusBadRequest, fmt.Errorf("unit with id %v does not exist", updateUnitStatusModel.UnitID)
+	}
+
+	status, err = query.UpdateUnitStatus(updateUnitStatusModel.UnitID, updateUnitStatusModel.Prefix, updateUnitStatusModel.Status)
+	if err != nil {
+		log.Printf("error while updating unit status: %v", err)
+		return status, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+}
+
+func (wr *WarehouseRepo) DeleteUnit(e echo.Context) (int, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	if err != nil {
+		return status, err
+	}
+
+	query := database.NewDBinstance(wr.db)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, fmt.Errorf("invalid user details")
+	}
+
+	var deleteUnitModel models.DeleteUnitModel
+
+	err = e.Bind(&deleteUnitModel)
+	if err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(deleteUnitModel); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
+	}
+
+	if deleteUnitModel.UnitID <= 0 {
+		log.Printf("invalid unit id")
+		return http.StatusBadRequest, fmt.Errorf("invalid unit id")
+	}
+
+	if exists, err := query.CheckIfUnitExists(deleteUnitModel.UnitID, deleteUnitModel.Prefix, claims.UserID); err != nil {
+		log.Printf("error while checking if unit exists: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	} else if !exists {
+		log.Printf("unit with id %v does not exist", deleteUnitModel.UnitID)
+		return http.StatusBadRequest, fmt.Errorf("unit with id %v does not exist", deleteUnitModel.UnitID)
+	}
+
+	status, err = query.DeleteUnit(deleteUnitModel.UnitID, deleteUnitModel.Prefix, claims.UserID)
+	if err != nil {
+		log.Printf("error while deleting unit: %v", err)
+		return status, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+}

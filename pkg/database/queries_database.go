@@ -252,6 +252,19 @@ func (db *Query) InitialiseDBqueries() error {
 			CONSTRAINT fk_resolved_issues_issue_id FOREIGN KEY (issue_id) REFERENCES issues(id) ON UPDATE CASCADE ON DELETE CASCADE,
 			CONSTRAINT fk_resolved_issues_resolved_by FOREIGN KEY (resolved_by) REFERENCES warehouses(id) ON UPDATE CASCADE ON DELETE CASCADE
 		)`,
+		`CREATE TABLE IF NOT EXISTS deleted_issues (
+			id SERIAL PRIMARY KEY,
+			issue_id INTEGER NOT NULL,
+			department_id INTEGER NOT NULL,
+			workspace_id INTEGER NOT NULL,
+			unit_id INTEGER NOT NULL,
+			unit_prefix VARCHAR(3) NOT NULL,
+			issue VARCHAR(100) NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			status issue_status DEFAULT 'raised',
+			deleted_by INTEGER NOT NULL,
+			deleted_at TIMESTAMPTZ DEFAULT NOW()
+		);`,
 		`CREATE TABLE IF NOT EXISTS deleted_units_assigned (
 			id SERIAL PRIMARY KEY,
 			unit_id INTEGER NOT NULL,

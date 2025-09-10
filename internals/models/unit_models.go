@@ -70,3 +70,15 @@ type GetAssignedUnitsModel struct {
 	ComponentID int `json:"component_id" validate:"required"`
 	WorkspaceID int `json:"workspace_id" validate:"required"`
 }
+
+type UpdateUnitStatusModel struct {
+	UnitID int    `json:"unit_id" validate:"required"`
+	Prefix string `json:"prefix" validate:"required"`
+	Status string `json:"status" validate:"required"`
+}
+
+type DeleteUnitModel struct {
+	UnitID    int    `json:"unit_id" validate:"required"`
+	Prefix    string `json:"prefix" validate:"required"`
+	Component int    `json:"component" validate:"required"`
+}

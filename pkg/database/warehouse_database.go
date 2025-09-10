@@ -568,3 +568,54 @@ func (q *Query) UpdateMaintenanceCost(unit_id int, prefix string, cost float32) 
 
 	return http.StatusOK, nil
 }
+
+func (q *Query) UpdateUnitStatus(unit_id int, prefix string, status string) (int, error) {
+	query := fmt.Sprintf("UPDATE %s_units SET status = $1 WHERE id = $2", prefix)
+
+	if _, err := q.db.Exec(query, status, unit_id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while updating component name: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+}
+
+func (q *Query) DeleteUnit(unit_id int, prefix string, user_id int) (int, error) {
+	query1 := fmt.Sprintf("DELETE FROM %s_units WHERE id = $1 AND warehouse_id = $2", prefix)
+	query2 := fmt.Sprintf("INSERT INTO %s_deleted_units(unit_id, warehouse_id, deleted_by) VALUES($1, $2, $3)", prefix)
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return http.StatusInternalServerError, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if _, err := tx.Exec(query1, unit_id, user_id); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no matching data found")
+			return http.StatusNotFound, fmt.Errorf("no matching data found")
+		}
+		log.Printf("error while deleting unit: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	if _, err := tx.Exec(query2, unit_id, user_id); err != nil {
+		log.Printf("error while deleting unit: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("database error")
+	}
+
+	return http.StatusOK, nil
+}

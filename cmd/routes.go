@@ -72,7 +72,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/department/request/new/units", departmentHandler.RequestNewUnitsHandler)              //
 	e.GET("/department/get/all/requests", departmentHandler.GetAllDepartmentRequestsHandler)       //
 	e.GET("/department/get/request/details", departmentHandler.GetDepartmentRequestDetailsHandler) //
-	e.DELETE("/department/delete/request", departmentHandler.DeleteRequestHandler)
+	e.DELETE("/department/delete/request", departmentHandler.DeleteRequestHandler)                 //
 	e.DELETE("/department/delete/issue", departmentHandler.DeleteIssueHandler)
 
 	warehouseHandler := handlers.NewWarehouse_Handler(repository.NewWarehouseRepo(db))
@@ -86,10 +86,12 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler) //
 	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)                     //
 	e.GET("/warehouse/get/unit/history", warehouseHandler.GetUnitAssignmentHistoryHandler)             //
-	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)
-	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)
-	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)
+	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)                 //
+	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)             //
+	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)                   //
 	e.PUT("/warehouse/update/component/unit/maintainance", warehouseHandler.UpdateMaintenanceCostHandler)
+	e.PUT("/warehouse/update/component/unit/status", warehouseHandler.UpdateUnitStatusHandler)
+	// add update unit status and delete unit api
 	// GET /warehouse/get/component/details
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))

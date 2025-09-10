@@ -174,3 +174,25 @@ func (wh *WarehouseHandler) UpdateMaintenanceCostHandler(e echo.Context) error {
 		"message": "successfull",
 	})
 }
+
+func (wh *WarehouseHandler) UpdateUnitStatusHandler(e echo.Context) error {
+	status, err := wh.WarehouseRepo.UpdateUnitStatus(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}
+
+func (wh *WarehouseHandler) DeleteUnitHandler(e echo.Context) error {
+	status, err := wh.WarehouseRepo.DeleteUnit(e)
+	if err != nil {
+		return echo.NewHTTPError(status, err.Error())
+	}
+
+	return e.JSON(status, echo.Map{
+		"message": "successfull",
+	})
+}

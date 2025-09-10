@@ -42,6 +42,8 @@ type WarehouseInterface interface {
 	UpdateComponentName(echo.Context) (int, error)
 	GetAssignedUnits(echo.Context) (int, []AssignedUnitsModel, int, int, int, error)
 	UpdateMaintenanceCost(echo.Context) (int, error)
+	UpdateUnitStatus(echo.Context) (int, error)
+	DeleteUnit(echo.Context) (int, error)
 }
 
 type GetAllIssuesModel struct {
