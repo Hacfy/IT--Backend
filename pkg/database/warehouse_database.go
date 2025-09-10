@@ -60,6 +60,14 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 		CONSTRAINT fk_%s_units_id FOREIGN KEY (id) REFERENCES %s_units(id) ON DELETE CASCADE
 	)`, prefix, prefix, prefix, prefix, prefix)
 
+	query4 := fmt.Sprintf(`
+	CREATE TABLE IF NOT EXISTS %s_deleted_units (
+		id SERIAL PRIMARY KEY,
+		unit_id INTEGER NOT NULL,
+		warehouse_id INTEGER NOT NULL,
+		deleted_at TIMESTAMPTZ DEFAULT NOW(),
+		deleted_by INTEGER NOT NULL
+	)`, prefix)
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
@@ -84,6 +92,10 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 	}
 
 	if _, err := tx.Exec(query3); err != nil {
+		return -1, err
+	}
+
+	if _, err := tx.Exec(query4); err != nil {
 		return -1, err
 	}
 
