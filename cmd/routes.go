@@ -77,32 +77,33 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	warehouseHandler := handlers.NewWarehouse_Handler(repository.NewWarehouseRepo(db))
 
-	e.POST("/warehouse/create/component", warehouseHandler.CreateComponentHandler)                     //
-	e.DELETE("/warehouse/delete/component", warehouseHandler.DeleteComponentHandler)                   //
-	e.POST("/warehouse/add/component/units", warehouseHandler.AddComponentUnitsHandler)                //
-	e.PATCH("/warehouse/assign/units", warehouseHandler.AssignUnitsHandler)                            //
-	e.GET("/warehouse/get/all/issues", warehouseHandler.GetAllIssuesHandler)                           //
-	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)          //
-	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler) //
-	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)                     //
-	e.GET("/warehouse/get/unit/history", warehouseHandler.GetUnitAssignmentHistoryHandler)             //
-	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)                 //
-	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)             //
-	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)                   //
-	e.PUT("/warehouse/update/component/unit/maintainance", warehouseHandler.UpdateMaintenanceCostHandler)
-	e.PUT("/warehouse/update/component/unit/status", warehouseHandler.UpdateUnitStatusHandler)
-	// add update unit status and delete unit api
+	e.POST("/warehouse/create/component", warehouseHandler.CreateComponentHandler)                        //
+	e.DELETE("/warehouse/delete/component", warehouseHandler.DeleteComponentHandler)                      //
+	e.POST("/warehouse/add/component/units", warehouseHandler.AddComponentUnitsHandler)                   //
+	e.PATCH("/warehouse/assign/units", warehouseHandler.AssignUnitsHandler)                               //
+	e.GET("/warehouse/get/all/issues", warehouseHandler.GetAllIssuesHandler)                              //
+	e.GET("/warehouse/get/all/components", warehouseHandler.GetAllWarehouseComponentsHandler)             //
+	e.GET("/warehouse/get/all/component/units", warehouseHandler.GetAllWarehouseComponentUnitsHandler)    //
+	e.GET("/warehouse/get/issue/details", warehouseHandler.GetIssueDetailsHandler)                        //
+	e.GET("/warehouse/get/unit/history", warehouseHandler.GetUnitAssignmentHistoryHandler)                //
+	e.PUT("/warehouse/update/issue/status", warehouseHandler.UpdateIssueStatusHandler)                    //
+	e.PUT("/warehouse/update/component/name", warehouseHandler.UpdateComponentNameHandler)                //
+	e.GET("/warehouse/get/assigned/units", warehouseHandler.GetAssignedUnitsHandler)                      //
+	e.PUT("/warehouse/update/component/unit/maintainance", warehouseHandler.UpdateMaintenanceCostHandler) //
+	e.PUT("/warehouse/update/component/unit/status", warehouseHandler.UpdateUnitStatusHandler)            //
+	e.DELETE("/warehouse/delete/component/unit", warehouseHandler.DeleteUnitHandler)                      //
+
 	// GET /warehouse/get/component/details
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 
-	e.GET("/details/get/all/departments", detailsHandler.GetAllDepartmentsHandler)
-	e.GET("/details/get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)
-	e.GET("/details/get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)
-	e.GET("/details/get/all/branches", detailsHandler.GetAllBranchesHandler)
-	e.GET("/details/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)
-	e.GET("/details/get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler)
-	e.GET("/details/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler)
+	e.GET("/details/get/all/departments", detailsHandler.GetAllDepartmentsHandler)                                  //
+	e.GET("/details/get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)                         //
+	e.GET("/details/get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)                 //
+	e.GET("/details/get/all/branches", detailsHandler.GetAllBranchesHandler)                                        //
+	e.GET("/details/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)                                    //
+	e.GET("/details/get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler) //
+	e.GET("/details/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler) //
 
 	excelHandler := handlers.NewExcelHandler(repository.NewExcelRepo(db))
 

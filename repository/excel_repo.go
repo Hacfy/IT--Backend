@@ -124,7 +124,8 @@ func (r *ExcelRepo) DownloadComponentMaintainanceReport(e echo.Context) (int, *e
 		return http.StatusInternalServerError, nil, fmt.Errorf("database error")
 	}
 
-	headers := []string{"Unit ID",
+	headers := []string{
+		"Unit ID",
 		"Cost",
 		"Maintenance Cost",
 		"Last Maintenance Date",
