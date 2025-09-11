@@ -67,3 +67,51 @@ func (q *Query) GetAllComponentUnits(prefix string) ([]models.ExcelMaintenanceRe
 
 	return units, nil
 }
+
+func (q *Query) GetAllComponentsPrefix(warehouse_id int) ([]models.ExcelPrefixReportModel, error) {
+	query := "SELECT name, id, prefix FROM components WHERE warehouse_id = $1"
+
+	var components []models.ExcelPrefixReportModel
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return nil, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	rows, err := tx.Query(query, warehouse_id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("no components found for warehouse %v", warehouse_id)
+			return nil, err
+		}
+		log.Printf("error while querying data: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var component models.ExcelPrefixReportModel
+		if err := rows.Scan(&component.ComponentName, &component.ComponentID, &component.Prefix); err != nil {
+			log.Printf("error while scanning data: %v", err)
+			return nil, err
+		}
+		components = append(components, component)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("row iteration error: %v", err)
+		return nil, err
+	}
+
+	return components, nil
+}

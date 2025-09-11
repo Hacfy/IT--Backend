@@ -32,3 +32,19 @@ func (eh *ExcelHandler) DownloadComponentMaintainanceReportHandler(e echo.Contex
 	}
 	return nil
 }
+
+func (eh *ExcelHandler) DownloadComponentPrefixReportHandler(e echo.Context) error {
+	Status, File, err := eh.ExcelRepo.DownloadComponentPrefixReport(e)
+	if err != nil {
+		return echo.NewHTTPError(Status, err)
+	}
+
+	e.Response().Header().Set(echo.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	e.Response().Header().Set(echo.HeaderContentDisposition, "attachment; filename=ComponentPrefixReport.xlsx")
+	e.Response().WriteHeader(Status)
+
+	if err := File.Write(e.Response()); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	return nil
+}

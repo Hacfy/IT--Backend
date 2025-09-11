@@ -21,6 +21,7 @@ type ExcelRepo struct {
 func NewExcelRepo(db *sql.DB) *ExcelRepo {
 	return &ExcelRepo{DB: db}
 }
+
 func (r *ExcelRepo) DownloadComponentMaintainanceReport(e echo.Context) (int, *excelize.File, error) {
 	status, claims, err := utils.VerifyUserToken(e, "warehouses", r.DB)
 	if err != nil {
@@ -224,6 +225,151 @@ func (r *ExcelRepo) DownloadComponentMaintainanceReport(e echo.Context) (int, *e
 		width := float64(maxLen) + 2
 		colName, _ := excelize.ColumnNumberToName(col)
 		_ = file.SetColWidth(sheet, colName, colName, width)
+	}
+
+	return http.StatusOK, file, nil
+}
+
+func (r *ExcelRepo) DownloadComponentPrefixReport(e echo.Context) (int, *excelize.File, error) {
+	status, claims, err := utils.VerifyUserToken(e, "warehouses", r.DB)
+	if err != nil {
+		return status, nil, err
+	}
+
+	query := database.NewDBinstance(r.DB)
+
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	if err != nil {
+		log.Printf("Error checking user details: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("database error")
+	} else if !ok {
+		log.Printf("Invalid user details")
+		return http.StatusUnauthorized, nil, fmt.Errorf("invalid user details")
+	}
+
+	var request models.DownloadComponentPrefixReportRequest
+
+	if err := e.Bind(&request); err != nil {
+		log.Printf("failed to decode request: %v", err)
+		return http.StatusBadRequest, nil, fmt.Errorf("invalid request format")
+	}
+
+	if err := validate.Struct(request); err != nil {
+		log.Printf("failed to validate request: %v", err)
+		return http.StatusBadRequest, nil, fmt.Errorf("failed to validate request")
+	}
+
+	list, err := query.GetAllComponentsPrefix(request.WarehouseID)
+	if err != nil {
+		log.Printf("error while fetching components: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("database error")
+	}
+
+	file := excelize.NewFile()
+	sheet := "Component Prefix Report"
+	_, err = file.NewSheet(sheet)
+	if err != nil {
+		log.Printf("error while creating excel sheet: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("database error")
+	}
+
+	_ = file.MergeCell(sheet, "A1", "F1")
+	_ = file.SetCellValue(sheet, "A1", "Component Prefix Report")
+
+	_ = file.MergeCell(sheet, "A2", "C2")
+	_ = file.SetCellValue(sheet, "A2", fmt.Sprintf("Warehouse ID: %d", request.WarehouseID))
+
+	_ = file.MergeCell(sheet, "D2", "F2")
+	today := time.Now().Format("02-01-2006")
+	_ = file.SetCellValue(sheet, "D2", today)
+
+	_ = file.MergeCell(sheet, "A3", "B3")
+	_ = file.SetCellValue(sheet, "A3", "Component Name")
+
+	_ = file.MergeCell(sheet, "C3", "D3")
+	_ = file.SetCellValue(sheet, "C3", "Component ID")
+
+	_ = file.MergeCell(sheet, "E3", "F3")
+	_ = file.SetCellValue(sheet, "E3", "Prefix")
+
+	for i, component := range list {
+		row := i + 4
+		_ = file.MergeCell(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row))
+		_ = file.MergeCell(sheet, fmt.Sprintf("C%d", row), fmt.Sprintf("D%d", row))
+		_ = file.MergeCell(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("F%d", row))
+
+		_ = file.SetCellValue(sheet, fmt.Sprintf("A%d", row), component.ComponentName)
+		_ = file.SetCellValue(sheet, fmt.Sprintf("C%d", row), component.ComponentID)
+		_ = file.SetCellValue(sheet, fmt.Sprintf("E%d", row), component.Prefix)
+	}
+
+	titleStyle, _ := file.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 18, Color: "#FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#4472C4"}}, // Blue header
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+
+	infoStyle, _ := file.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 12},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#D9E1F2"}},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+
+	headerStyle, _ := file.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Color: "#FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#000000"}},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center", WrapText: true},
+		Border: []excelize.Border{
+			{Type: "left", Color: "FFFFFF", Style: 1},
+			{Type: "right", Color: "FFFFFF", Style: 1},
+			{Type: "top", Color: "FFFFFF", Style: 1},
+			{Type: "bottom", Color: "FFFFFF", Style: 1},
+		},
+	})
+
+	bodyStyle, _ := file.NewStyle(&excelize.Style{
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+
+	altRowStyle, _ := file.NewStyle(&excelize.Style{
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#F2F2F2"}},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+
+	_ = file.SetCellStyle(sheet, "A1", "F1", titleStyle)
+	_ = file.SetCellStyle(sheet, "A2", "F2", infoStyle)
+	_ = file.SetCellStyle(sheet, "A3", "F3", headerStyle)
+
+	lastRow := len(list) + 3
+	for row := 4; row <= lastRow; row++ {
+		style := bodyStyle
+		if row%2 == 0 {
+			style = altRowStyle
+		}
+		_ = file.SetCellStyle(sheet, fmt.Sprintf("A%d", row), fmt.Sprintf("F%d", row), style)
+	}
+
+	for col := 1; col <= 6; col++ {
+		colName, _ := excelize.ColumnNumberToName(col)
+		_ = file.SetColWidth(sheet, colName, colName, 20)
 	}
 
 	return http.StatusOK, file, nil

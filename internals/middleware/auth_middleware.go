@@ -14,7 +14,6 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(401, echo.Map{"error": "Unauthorized"})
 		}
 
-		// Set user ID and role for later use
 		c.Set("userID", claims.UserID)
 		c.Set("userType", claims.UserType)
 		c.Set("userEmail", claims.UserEmail)

@@ -22,4 +22,15 @@ type ExcelMaintenanceReportModel struct {
 
 type ExcelInterface interface {
 	DownloadComponentMaintainanceReport(echo.Context) (int, *excelize.File, error)
+	DownloadComponentPrefixReport(echo.Context) (int, *excelize.File, error)
+}
+
+type DownloadComponentPrefixReportRequest struct {
+	WarehouseID int `json:"warehouse_id" validate:"required"`
+}
+
+type ExcelPrefixReportModel struct {
+	ComponentName string `json:"component_name"`
+	ComponentID   int    `json:"component_id"`
+	Prefix        string `json:"prefix"`
 }

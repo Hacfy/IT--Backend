@@ -4,17 +4,18 @@ import (
 	"database/sql"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/handlers"
+	"github.com/Hacfy/IT_INVENTORY/internals/middleware"
 	"github.com/Hacfy/IT_INVENTORY/repository"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	defaultMiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e := echo.New()
 
-	e.Use(middleware.Logger())
+	e.Use(defaultMiddleware.Logger())
 
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	e.Use(defaultMiddleware.CORSWithConfig(defaultMiddleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:3000", "http://localhost:3001"},
 		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.PATCH, echo.DELETE},
 	}))
@@ -28,17 +29,20 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.DELETE("/main_admin/delete/organisation", mainAdminHandler.DeleteOrganisationHandler) //
 	e.GET("/main_admin/get/all/organisations", mainAdminHandler.GetAllOrganisationsHandler) //
 	e.GET("/main_admin/get/all/main_admins", mainAdminHandler.GetAllMainAdminsHandler)      //
+	//write main_adim middleware
 
 	authHandler := handlers.NewAuthHandler(repository.NewAuthRepo(db))
 
-	e.POST("/auth/login/users", authHandler.UserLoginHandler)                              //
-	e.POST("/auth/logout/users", authHandler.UserLogoutHandler)                            //
+	e.POST("/auth/login/users", authHandler.UserLoginHandler) //
+	e.POST("/auth/logout/users", authHandler.UserLogoutHandler)
 	e.PUT("/auth/change/password", authHandler.ChangeUserPasswordHandler)                  //
 	e.POST("/auth/reset/password", authHandler.ResetPasswordHandler)                       //
 	e.POST("/auth/forgot/password", authHandler.ForgotPasswordHandler)                     //
 	e.POST("/auth/verify/forgot/password", authHandler.VerifyForgotPasswordRequestHandler) //
 
 	organisatoinHandler := handlers.NewOrganisationHandler(repository.NewOrgRepo(db))
+
+	e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admins", "organisations", "branch_heads", "department_heads", "warehouses"))
 
 	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)              //
 	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)            //
@@ -107,7 +111,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	excelHandler := handlers.NewExcelHandler(repository.NewExcelRepo(db))
 
-	e.GET("/excel/download/component/maintainance/report", excelHandler.DownloadComponentMaintainanceReportHandler)
-
+	e.GET("/excel/download/component/maintainance/report", excelHandler.DownloadComponentMaintainanceReportHandler) //
+	e.GET("/excel/download/component/prefix/report", excelHandler.DownloadComponentPrefixReportHandler)
 	return e
 }
