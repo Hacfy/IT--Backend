@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/handlers"
-	"github.com/Hacfy/IT_INVENTORY/internals/middleware"
+	// "github.com/Hacfy/IT_INVENTORY/internals/middleware"
 	"github.com/Hacfy/IT_INVENTORY/repository"
 	"github.com/labstack/echo/v4"
 	defaultMiddleware "github.com/labstack/echo/v4/middleware"
@@ -42,7 +42,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	organisatoinHandler := handlers.NewOrganisationHandler(repository.NewOrgRepo(db))
 
-	e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admins", "organisations", "branch_heads", "department_heads", "warehouses"))
+	// e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admins", "organisations", "branch_heads", "department_heads", "warehouses"))
 
 	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)              //
 	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)            //
