@@ -21,9 +21,6 @@ func NewAuthHandler(user models.UserInterface) *AuthHandler {
 func (ah *AuthHandler) UserLoginHandler(e echo.Context) error {
 	status, accessToken, refreshToken, token, err := ah.AuthRepo.UserLogin(e)
 	if err != nil {
-		if status == http.StatusFound {
-			return e.Redirect(http.StatusFound, "/change-password")
-		}
 		return echo.NewHTTPError(status, err.Error())
 	}
 
@@ -42,6 +39,13 @@ func (ah *AuthHandler) UserLoginHandler(e echo.Context) error {
 	refreshCookie.Secure = false
 	refreshCookie.Expires = time.Now().Add(7 * 24 * time.Hour)
 	e.SetCookie(refreshCookie)
+
+	if status == http.StatusFound {
+		return e.JSON(status, echo.Map{
+			"message": "redirect",
+			"token":   token,
+		})
+	}
 
 	return e.JSON(status, echo.Map{
 		"message": "logged in successfully",

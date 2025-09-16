@@ -54,10 +54,6 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("error while checking user details")
 	}
 
-	if !T {
-		return http.StatusFound, "", "", "", fmt.Errorf("redirect")
-	}
-
 	db_password, db_name, db_id, ok, err := query.GetUserPasswordID(req_user.Email, userType)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
@@ -97,6 +93,10 @@ func (ar *AuthRepo) UserLogin(e echo.Context) (int, string, string, string, erro
 	if err != nil {
 		log.Printf("error while generating token for user %s: %v", req_user.Email, err)
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("unable to generate token, please try again later")
+	}
+
+	if !T {
+		return http.StatusFound, accessToken, refreshToken, token, nil
 	}
 
 	return http.StatusOK, accessToken, refreshToken, token, nil
@@ -421,12 +421,12 @@ func (ar *AuthRepo) ResetPassword(e echo.Context) (int, string, string, string, 
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid user details")
 	}
 
-	accessToken, err := utils.GenerateUserToken(req_user.Email, UserType, UserName, UserID, time.Now().Local().Add(24*time.Hour).Unix(), time_unix)
+	accessToken, err := utils.GenerateCookieToken(req_user.Email, UserType, UserID, time.Now().Local().Add(24*time.Hour).Unix(), time_unix)
 	if err != nil {
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to generate token, please try again later")
 	}
 
-	refreshToken, err := utils.GenerateUserToken(req_user.Email, UserType, UserName, UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), time_unix)
+	refreshToken, err := utils.GenerateCookieToken(req_user.Email, UserType, UserID, time.Now().Local().Add(7*24*time.Hour).Unix(), time_unix)
 	if err != nil {
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("failed to generate token, please try again later")
 	}

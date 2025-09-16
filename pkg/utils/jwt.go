@@ -14,8 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var jwtSecret = os.Getenv("JWT_SECRET")
-
 func GenerateMainAdminToken(mainAdmin models.MainAdminModel) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -87,6 +85,8 @@ func GenerateUserToken(userEmail, userType, userName string, userID int, exp, ia
 func VerifyUserToken(e echo.Context, userType string, db *sql.DB) (int, models.UserTokenModel, error) {
 	var tokenModel models.UserTokenModel
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	tokenString := e.Request().Header.Get("Authorization")
 	if tokenString == "" {
 		log.Printf("missgin token")
@@ -103,7 +103,7 @@ func VerifyUserToken(e echo.Context, userType string, db *sql.DB) (int, models.U
 	}
 
 	claims, ok := token.Claims.(*models.UserTokenModel)
-	if (ok && token.Valid) != true {
+	if !(ok && token.Valid) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, tokenModel, fmt.Errorf("invalid token")
 	}
@@ -138,7 +138,7 @@ func GenerateComponentToken(id int, name, prefix string) (string, error) {
 		"exp":            time.Now().Local().Add(7 * 24 * time.Hour).Unix(),
 	})
 
-	signedToken, err := token.SignedString(jwtSecret)
+	signedToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		log.Printf("error while generating token: %v", err)
 		return "", err
@@ -148,8 +148,11 @@ func GenerateComponentToken(id int, name, prefix string) (string, error) {
 }
 
 func ParseToken(tokenStr string) (*models.UserTokenModel, error) {
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return []byte(jwtSecret), nil
 	})
 	if err != nil || !token.Valid {
 		return nil, fmt.Errorf("invalid token")

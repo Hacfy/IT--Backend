@@ -120,7 +120,7 @@ func (ma *MainAdminRepo) LoginMainAdmin(e echo.Context) (int, string, string, st
 
 	if err = utils.CheckPassword(login_ma.MainAdminPassword, db_ma.MainAdminPassword); err != nil {
 		log.Printf("wrong password %v: %v", login_ma.MainAdminEmail, err)
-		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid main admin credentials")
+		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid main admin password")
 	}
 
 	DB_iat := time.Now().Local().Unix()
