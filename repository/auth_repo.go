@@ -116,7 +116,7 @@ func (ar *AuthRepo) ChangeUserPassword(e echo.Context) (int, string, string, str
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return []byte(jwtSecret), nil
 	})
 
 	if err != nil {
@@ -126,7 +126,7 @@ func (ar *AuthRepo) ChangeUserPassword(e echo.Context) (int, string, string, str
 
 	claims, ok := token.Claims.(*models.UserTokenModel)
 	if !(ok && token.Valid) {
-		log.Printf("token expired or not of UserTokenModel")
+		log.Printf("token not of UserTokenModel")
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid token")
 	}
 
@@ -138,7 +138,7 @@ func (ar *AuthRepo) ChangeUserPassword(e echo.Context) (int, string, string, str
 		return http.StatusInternalServerError, "", "", "", fmt.Errorf("database error")
 	}
 
-	if Time.After(claims.IssuedAt.Time) {
+	if Time.After(claims.ExpiresAt.Time.UTC()) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, "", "", "", fmt.Errorf("invalid token")
 	}
@@ -332,7 +332,7 @@ func (ar *AuthRepo) ForgotPassword(e echo.Context) (int, time.Time, error) {
 		log.Println("otp deleted")
 	}()
 
-	return http.StatusOK, Time, nil
+	return http.StatusOK, Time.UTC(), nil
 }
 
 func (ar *AuthRepo) VerifyForgotPasswordRequest(e echo.Context) (int, error) {

@@ -90,7 +90,7 @@ func (db *Query) InitialiseDBqueries() error {
 			deleted_at TIMESTAMPTZ DEFAULT NOW()
 		);`,
 		`CREATE TABLE IF NOT EXISTS otps (
-			email VARCHAR(50) PRIMARY KEY,
+			email VARCHAR(50),
 			otp VARCHAR(6) NOT NULL,
 			time TIMESTAMPTZ NOT NULL
 		)`,

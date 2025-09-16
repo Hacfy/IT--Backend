@@ -94,27 +94,33 @@ func (q *Query) ChangeUserPassword(newPassword, userEmail, userType string) (int
 	return http.StatusOK, nil
 }
 
-func (q *Query) SetOtp(email, otp string, time int64) error {
+func (q *Query) SetOtp(email, otp string, t int64) error {
+	expTime := time.Unix(t, 0).UTC()
 	query := "INSERT INTO otps(email, otp, time) VALUES($1, $2, $3)"
-	if _, err := q.db.Exec(query, email, otp, time); err != nil {
+	if _, err := q.db.Exec(query, email, otp, expTime); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (q *Query) DeleteOtp(email string, time int64) error {
+func (q *Query) DeleteOtp(email string, t int64) error {
+	expTime := time.Unix(t, 0).UTC()
 	query := "DELETE FROM otps WHERE email = $1 AND time = $2"
-	if _, err := q.db.Exec(query, email, time); err != nil {
+	if _, err := q.db.Exec(query, email, expTime); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (q *Query) VerifyOtp(email, otp string, time int64) (bool, error) {
+func (q *Query) VerifyOtp(email, otp string, t int64) (bool, error) {
 	var exists bool
+	expTime := time.Unix(t, 0).UTC()
 	query := "SELECT EXISTS(SELECT 1 FROM otps WHERE email = $1 AND otp = $2 AND time = $3)"
-	if err := q.db.QueryRow(query, email, otp, time).Scan(&exists); err != nil {
+	if err := q.db.QueryRow(query, email, otp, expTime).Scan(&exists); err != nil {
 		return false, err
 	}
-	return exists, nil
+	if exists {
+		return true, nil
+	}
+	return false, nil
 }

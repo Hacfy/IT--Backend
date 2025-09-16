@@ -64,15 +64,19 @@ func GenerateCookieToken(userEmail, userType string, userID int, exp, iat int64)
 }
 
 func GenerateUserToken(userEmail, userType, userName string, userID int, exp, iat int64) (string, error) {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":    userID,
-		"user_name":  userName,
-		"user_email": userEmail,
-		"user_type":  userType,
-		"iat":        iat,
-		"exp":        exp,
-	})
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+	claims := &models.UserTokenModel{
+		UserID:    userID,
+		UserEmail: userEmail,
+		UserName:  userName,
+		UserType:  userType,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Unix(exp, 0).UTC()),
+			IssuedAt:  jwt.NewNumericDate(time.Unix(iat, 0).UTC()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signedToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
