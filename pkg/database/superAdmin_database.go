@@ -31,19 +31,19 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 		}
 	}()
 
-	if err := tx.QueryRow(query1, superAdminID).Scan(&branch_org_id); err != nil {
+	if err = tx.QueryRow(query1, superAdminID).Scan(&branch_org_id); err != nil {
 		return err
 	}
 
-	if err := tx.QueryRow(query2, branch_org_id, superAdminID, branch.BranchName, branch.BranchLocation).Scan(&branch_id); err != nil {
+	if err = tx.QueryRow(query2, branch_org_id, superAdminID, branch.BranchName, branch.BranchLocation).Scan(&branch_id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(query3, branch.BranchHeadEmail, "branch_heads"); err != nil {
+	if _, err = tx.Exec(query3, branch.BranchHeadEmail, "branch_heads"); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(query4, branch_id, branch.BranchHeadName, branch.BranchHeadEmail, hashedPassword); err != nil {
+	if _, err = tx.Exec(query4, branch_id, branch.BranchHeadName, branch.BranchHeadEmail, hashedPassword); err != nil {
 		return err
 	}
 
@@ -101,26 +101,26 @@ func (q *Query) UpdateBranchHead(branchHead models.UpdateBranchHeadModel, superA
 
 	var branch_id int
 
-	if err := tx.QueryRow(query1, branchHead.BranchHeadID).Scan(&branch_id); err != nil {
+	if err = tx.QueryRow(query1, branchHead.BranchHeadID).Scan(&branch_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query2, branchHead.BranchHeadEmail); err != nil {
+	if _, err = tx.Exec(query2, branchHead.BranchHeadEmail); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query3, branch_id, branchHead.BranchHeadID, branchHead.BranchHeadEmail, superAdminID); err != nil {
+	if _, err = tx.Exec(query3, branch_id, branchHead.BranchHeadID, branchHead.BranchHeadEmail, superAdminID); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query4, branchHead.NewBranchHeadEmail, "branch_heads"); err != nil {
+	if _, err = tx.Exec(query4, branchHead.NewBranchHeadEmail, "branch_heads"); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query5, branch_id, branchHead.NewBranchHeadName, branchHead.NewBranchHeadEmail, password); err != nil {
+	if _, err = tx.Exec(query5, branch_id, branchHead.NewBranchHeadName, branchHead.NewBranchHeadEmail, password); err != nil {
 		return http.StatusInternalServerError, err
 	}
 

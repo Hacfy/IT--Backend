@@ -36,7 +36,7 @@ func (db *Query) InitialiseDBqueries() error {
 					'organisations',
 					'super_admins', 
 					'branch_heads', 
-					'department_heads'
+					'department_heads',
 					'warehouses'
 				);
 			END IF;
@@ -108,7 +108,7 @@ func (db *Query) InitialiseDBqueries() error {
 			id SERIAL PRIMARY KEY,
 			org_id INTEGER NOT NULL,
 			name VARCHAR(50) NOT NULL,
-			email VARCHAR(50) NOT NULL,
+			email VARCHAR(50) UNIQUE NOT NULL,
 			password VARCHAR(256) NOT NULL,
 			CONSTRAINT fk_super_admin_org_id FOREIGN KEY (org_id) REFERENCES organisations(id) ON DELETE CASCADE ON UPDATE CASCADE,
 			CONSTRAINT fk_super_admin_super_admin_email FOREIGN KEY (email) REFERENCES users(user_email) ON DELETE CASCADE ON UPDATE CASCADE

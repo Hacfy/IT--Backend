@@ -37,7 +37,7 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	token, err := jwt.ParseWithClaims(tokenString, &tokenModel, func(t *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return []byte(jwtSecret), nil
 	})
 
 	if err != nil {

@@ -51,11 +51,11 @@ func (q *Query) CreateOrganisation(organisation models.OrganisationModel) (int, 
 		}
 	}()
 
-	if _, err := tx.Exec(query1, organisation.OrganisationEmail, "organisations"); err != nil {
+	if _, err = tx.Exec(query1, organisation.OrganisationEmail, "organisations"); err != nil {
 		return -1, err
 	}
 
-	if err := tx.QueryRow(query2, organisation.OrganisationMainAdminID, organisation.OrganisationName, organisation.OrganisationEmail, organisation.OrganisationPhoneNumber, organisation.OrganisationPassword).Scan(&orgID); err != nil {
+	if err = tx.QueryRow(query2, organisation.OrganisationMainAdminID, organisation.OrganisationName, organisation.OrganisationEmail, organisation.OrganisationPhoneNumber, organisation.OrganisationPassword).Scan(&orgID); err != nil {
 		return -1, err
 	}
 
@@ -101,7 +101,7 @@ func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by
 
 	var exists bool
 
-	if err := tx.QueryRow(query0, main_admin_id).Scan(&exists); err != nil {
+	if err = tx.QueryRow(query0, main_admin_id).Scan(&exists); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -112,14 +112,14 @@ func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by
 		return http.StatusConflict, fmt.Errorf("main_admin has organisations associated with them")
 	}
 
-	if _, err := tx.Exec(query1, mainAdminEmail); err != nil {
+	if _, err = tx.Exec(query1, mainAdminEmail); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if _, err := tx.Exec(query2, main_admin_id, mainAdminEmail, deleted_by); err != nil {
+	if _, err = tx.Exec(query2, main_admin_id, mainAdminEmail, deleted_by); err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
@@ -156,7 +156,7 @@ func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, de
 		}
 	}()
 
-	if err := tx.QueryRow(query1, organisationEmail).Scan(&super_admin_exists); err != nil {
+	if err = tx.QueryRow(query1, organisationEmail).Scan(&super_admin_exists); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -166,28 +166,28 @@ func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, de
 	if super_admin_exists {
 		return http.StatusConflict, fmt.Errorf("super_admin has branches associated with it")
 	}
-	if err := tx.QueryRow(query2, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+	if err = tx.QueryRow(query2, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if _, err := tx.Exec(query3, organisationEmail); err != nil {
+	if _, err = tx.Exec(query3, organisationEmail); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if err := tx.QueryRow(query4, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+	if err = tx.QueryRow(query4, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if err := tx.QueryRow(query5, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+	if err = tx.QueryRow(query5, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -209,7 +209,7 @@ func (q *Query) GetAllOrganisations(mainAdminID int) ([]models.GetAllOrganisatio
 
 	for rows.Next() {
 		var org models.GetAllOrganisationsModel
-		err := rows.Scan(&org.OrganisationID, &org.OrganisationName, &org.OrganisationEmail, &org.OrganisationPhoneNumber)
+		err = rows.Scan(&org.OrganisationID, &org.OrganisationName, &org.OrganisationEmail, &org.OrganisationPhoneNumber)
 		if err != nil {
 			return []models.GetAllOrganisationsModel{}, err
 		}

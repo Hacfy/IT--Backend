@@ -30,11 +30,11 @@ func (q *Query) CreateWorkspace(workspace models.CreateWorkspaceModel, departmen
 
 	var department_id, workspace_id int
 
-	if err := tx.QueryRow(query1, departmentHeadID).Scan(&department_id); err != nil {
+	if err = tx.QueryRow(query1, departmentHeadID).Scan(&department_id); err != nil {
 		return http.StatusInternalServerError, -1, err
 	}
 
-	if err := tx.QueryRow(query2, department_id, workspace.WorkspaceName).Scan(&workspace_id); err != nil {
+	if err = tx.QueryRow(query2, department_id, workspace.WorkspaceName).Scan(&workspace_id); err != nil {
 		return http.StatusInternalServerError, -1, err
 	}
 
@@ -62,14 +62,14 @@ func (q *Query) DeleteWorkspace(workspace models.DeleteWorkspaceModel, departmen
 
 	var workspace_id int
 
-	if _, err := tx.Exec(query1, workspace.WorkspaceName, workspace.WorkspaceID); err != nil {
+	if _, err = tx.Exec(query1, workspace.WorkspaceName, workspace.WorkspaceID); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query2, workspace_id, departmentHeadID); err != nil {
+	if _, err = tx.Exec(query2, workspace_id, departmentHeadID); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
@@ -99,7 +99,7 @@ func (q *Query) RaiseIssue(issue models.IssueModel) (int, int, error) {
 	var issue_id int
 	var workspace_id int
 
-	if err := tx.QueryRow(query1, issue.UnitID).Scan(&workspace_id); err != nil {
+	if err = tx.QueryRow(query1, issue.UnitID).Scan(&workspace_id); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching unit found :%v", err)
 			return http.StatusNotFound, -1, fmt.Errorf("no matching data found")
@@ -107,11 +107,11 @@ func (q *Query) RaiseIssue(issue models.IssueModel) (int, int, error) {
 		return http.StatusInternalServerError, -1, err
 	}
 
-	if err := tx.QueryRow(query2, issue.DepartmentID, issue.WarehouseID, issue.WorkspaceID, issue.UnitID, issue.Issue).Scan(&issue_id); err != nil {
+	if err = tx.QueryRow(query2, issue.DepartmentID, issue.WarehouseID, issue.WorkspaceID, issue.UnitID, issue.Issue).Scan(&issue_id); err != nil {
 		return http.StatusInternalServerError, -1, err
 	}
 
-	if _, err := tx.Exec(query3, issue.UnitID); err != nil {
+	if _, err = tx.Exec(query3, issue.UnitID); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching unit found :%v", err)
 			return http.StatusNotFound, -1, fmt.Errorf("no matching data found")
@@ -144,7 +144,7 @@ func (q *Query) RequestNewUnits(department_id int, workspace_id int, warehouse_i
 	var Request_id int
 	var num int
 
-	if err := tx.QueryRow(query1, component_id, warehouse_id).Scan(&num); err != nil {
+	if err = tx.QueryRow(query1, component_id, warehouse_id).Scan(&num); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching unit found :%v", err)
 			return http.StatusNotFound, -1, fmt.Errorf("no matching data found")
@@ -158,7 +158,7 @@ func (q *Query) RequestNewUnits(department_id int, workspace_id int, warehouse_i
 		return http.StatusBadRequest, -1, fmt.Errorf("not enough units available")
 	}
 
-	if err := tx.QueryRow(query2, department_id, workspace_id, warehouse_id, component_id, number_of_units, prefix, user_id).Scan(&Request_id); err != nil {
+	if err = tx.QueryRow(query2, department_id, workspace_id, warehouse_id, component_id, number_of_units, prefix, user_id).Scan(&Request_id); err != nil {
 		log.Printf("error while requesting new units: %v", err)
 		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
 	}
@@ -174,7 +174,7 @@ func (q *Query) GetAllRequests(department_id int) ([]models.AllRequestsModel, er
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
-		return nil, fmt.Errorf("database error")
+		return nil, err
 	}
 
 	defer func() {
@@ -206,7 +206,7 @@ func (q *Query) GetAllRequests(department_id int) ([]models.AllRequestsModel, er
 		requests = append(requests, request)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return nil, fmt.Errorf("internal server error, please try again later")
 	}
@@ -260,14 +260,14 @@ func (q *Query) DeleteIssue(issue int, userID int) (int, error) {
 	var created_at int64
 	var status string
 
-	if err := tx.QueryRow(query1, issue).Scan(&issue_id, &department_id, &workspace_id, &unit_id, &unit_prefix, &Issue, &created_at, &status); err != nil {
+	if err = tx.QueryRow(query1, issue).Scan(&issue_id, &department_id, &workspace_id, &unit_id, &unit_prefix, &Issue, &created_at, &status); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query2, issue_id, department_id, workspace_id, unit_id, unit_prefix, Issue, created_at, status, userID); err != nil {
+	if _, err = tx.Exec(query2, issue_id, department_id, workspace_id, unit_id, unit_prefix, Issue, created_at, status, userID); err != nil {
 		return http.StatusInternalServerError, err
 	}
 

@@ -12,12 +12,11 @@ import (
 func (q *Query) CreateDepartment(department models.CreateDepartmentModel, branch_head_id int, password string) error {
 	query0 := "SELECT branch_id FROM branch_heads WHERE id = $1"
 	query1 := "INSERT INTO departments(branch_id, department_name) VALUES($1, $2) RETURNING department_id"
-	query2 := "INSERT INTO users(user_email, user_level) VALUES($1, 2)"
+	query2 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
 	query3 := "INSERT INTO department_heads(department_id, name, email, password) VALUES($1, $2, $3, $4)"
 
 	tx, err := q.db.Begin()
 	if err != nil {
-		log.Printf("error while initialising DB: %v", err)
 		return err
 	}
 
@@ -32,19 +31,19 @@ func (q *Query) CreateDepartment(department models.CreateDepartmentModel, branch
 
 	var department_id, branch_id int
 
-	if err := tx.QueryRow(query0, branch_head_id).Scan(&branch_id); err != nil {
+	if err = tx.QueryRow(query0, branch_head_id).Scan(&branch_id); err != nil {
 		return err
 	}
 
-	if err := tx.QueryRow(query1, branch_id, department.DepartmentName).Scan(&department_id); err != nil {
+	if err = tx.QueryRow(query1, branch_id, department.DepartmentName).Scan(&department_id); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(query2, department.DepartmentHeadEmail, "department_heads"); err != nil {
+	if _, err = tx.Exec(query2, department.DepartmentHeadEmail, "department_heads"); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(query3, department_id, department.DepartmentHeadName, department.DepartmentHeadEmail, password); err != nil {
+	if _, err = tx.Exec(query3, department_id, department.DepartmentHeadName, department.DepartmentHeadEmail, password); err != nil {
 		return err
 	}
 
@@ -52,10 +51,29 @@ func (q *Query) CreateDepartment(department models.CreateDepartmentModel, branch
 }
 
 func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHeadID int, password string) (int, error) {
-	query0 := "SELECT branch_id FROM branch_heads WHERE id = $1"
-	query1 := "INSERT INTO users(user_email, user_level) VALUES($1, 2)"
-	query2 := "INSERT INTO warehouses(name, email, branch_id, password) VALUES($1, $2, $3, $4)"
-	var warehouse_id, branch_id int
+	query0 := `
+    SELECT branch_id 
+    FROM branch_heads 
+    WHERE id = $1
+`
+
+	query1 := `
+    INSERT INTO users(user_email, user_level) 
+    VALUES($1, $2) 
+    RETURNING user_email
+`
+
+	query2 := `
+    INSERT INTO warehouses(name, email, branch_id, password) 
+    VALUES($1, $2, $3, $4) 
+    RETURNING id
+`
+
+	var (
+		branch_id    int
+		user_id      int
+		warehouse_id int
+	)
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -72,22 +90,25 @@ func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHea
 		}
 	}()
 
-	if err := tx.QueryRow(query0, branchHeadID).Scan(&branch_id); err != nil {
+	if err = tx.QueryRow(query0, branchHeadID).Scan(&branch_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, err
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if err := tx.QueryRow(query1, warehouse.WarehouseUserEmail, "warehouses").Scan(&warehouse_id); err != nil {
+	if err = tx.QueryRow(query1, warehouse.WarehouseUserEmail, "warehouses").Scan(&user_id); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	_, err = tx.Exec(query2, warehouse.WarehouseUserName, warehouse.WarehouseUserEmail, branch_id, password)
-	if err != nil {
+	if err = tx.QueryRow(query2, warehouse.WarehouseUserName, warehouse.WarehouseUserEmail, branch_id, password).Scan(&warehouse_id); err != nil {
 		return http.StatusInternalServerError, err
 	}
+
+	log.Printf("New warehouse created: warehouse_id=%d, user_id=%d, branch_id=%d", warehouse_id, user_id, branch_id)
+
 	return http.StatusCreated, nil
+
 }
 
 func (q *Query) UpdateDepartmentHead(department_head models.UpdateDepartmentHeadModel, branch_head_id int, password string) (int, error) {
@@ -114,26 +135,26 @@ func (q *Query) UpdateDepartmentHead(department_head models.UpdateDepartmentHead
 
 	var department_id, department_head_id int
 
-	if err := tx.QueryRow(query1, department_head.DepartmentHeadEmail).Scan(&department_id, &department_head_id); err != nil {
+	if err = tx.QueryRow(query1, department_head.DepartmentHeadEmail).Scan(&department_id, &department_head_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query2, department_head.DepartmentHeadEmail); err != nil {
+	if _, err = tx.Exec(query2, department_head.DepartmentHeadEmail); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query3, department_id, department_head_id, department_head.DepartmentHeadEmail, branch_head_id); err != nil {
+	if _, err = tx.Exec(query3, department_id, department_head_id, department_head.DepartmentHeadEmail, branch_head_id); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query4, department_head.NewDepartmentHeadEmail, "department_heads"); err != nil {
+	if _, err = tx.Exec(query4, department_head.NewDepartmentHeadEmail, "department_heads"); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query5, department_id, department_head.NewDepartmentHeadName, department_head.NewDepartmentHeadEmail, password); err != nil {
+	if _, err = tx.Exec(query5, department_id, department_head.NewDepartmentHeadName, department_head.NewDepartmentHeadEmail, password); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
@@ -163,22 +184,22 @@ func (q *Query) UpdateWarehouseHead(warehouse_head models.UpdateWarehouseHeadMod
 
 	var warehouse_id int
 
-	if _, err := tx.Exec(query1, warehouse_head.NewWarehouseHeadEmail, "warehouses"); err != nil {
+	if _, err = tx.Exec(query1, warehouse_head.NewWarehouseHeadEmail, "warehouses"); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if err := tx.QueryRow(query2, warehouse_head.NewWarehouseHeadName, warehouse_head.NewWarehouseHeadEmail, password, warehouse_head.WarehouseID).Scan(&warehouse_id); err != nil {
+	if err = tx.QueryRow(query2, warehouse_head.NewWarehouseHeadName, warehouse_head.NewWarehouseHeadEmail, password, warehouse_head.WarehouseID).Scan(&warehouse_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query3, warehouse_id, warehouse_head.NewWarehouseHeadEmail, branch_head_id); err != nil {
+	if _, err = tx.Exec(query3, warehouse_id, warehouse_head.NewWarehouseHeadEmail, branch_head_id); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err := tx.Exec(query4, warehouse_head.WarehouseHeadEmail); err != nil {
+	if _, err = tx.Exec(query4, warehouse_head.WarehouseHeadEmail); err != nil {
 		return http.StatusInternalServerError, err
 	}
 

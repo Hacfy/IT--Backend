@@ -125,7 +125,7 @@ func VerifyUserToken(e echo.Context, userType string, db *sql.DB) (int, models.U
 		return http.StatusInternalServerError, tokenModel, fmt.Errorf("database error")
 	}
 
-	if time.After(claims.IssuedAt.Time) {
+	if time.After(claims.ExpiresAt.Time) {
 		log.Printf("token expired or not of UserTokenModel")
 		return http.StatusUnauthorized, tokenModel, fmt.Errorf("invalid token")
 	}

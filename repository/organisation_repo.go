@@ -80,6 +80,8 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 
 	SuperAdmin.SuperAdminPassword = hash
 
+	SuperAdmin.SuperAdminEmail = new_sa.SuperAdminEmail
+
 	SuperAdmin.SuperAdminID, err = query.CreateSuperAdmin(SuperAdmin)
 	if err != nil {
 		log.Printf("error while storing SuperAdmin data in DB: %v", err)
@@ -87,11 +89,11 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 	}
 
 	go func() {
-		log.Printf("sending login credentials to %v", SuperAdmin.SuperAdminEmail)
+		log.Printf("sending login credentials to %s", SuperAdmin.SuperAdminEmail)
 		if err := utils.SendLoginCredentials(SuperAdmin.SuperAdminEmail, password); err != nil {
-			log.Printf("error while sending login credentials to %v: %v", SuperAdmin.SuperAdminEmail, err)
+			log.Printf("error while sending login credentials to %s: %v", SuperAdmin.SuperAdminEmail, err)
 		}
-		log.Printf("credentials sent to %v", SuperAdmin.SuperAdminEmail)
+		log.Printf("credentials sent to %s", SuperAdmin.SuperAdminEmail)
 	}()
 
 	return http.StatusCreated, nil

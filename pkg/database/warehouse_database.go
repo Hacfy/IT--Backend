@@ -83,19 +83,19 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 		}
 	}()
 
-	if err := tx.QueryRow(query1, name, prefix, warehouse_id).Scan(&id); err != nil {
+	if err = tx.QueryRow(query1, name, prefix, warehouse_id).Scan(&id); err != nil {
 		return -1, err
 	}
 
-	if _, err := tx.Exec(query2); err != nil {
+	if _, err = tx.Exec(query2); err != nil {
 		return -1, err
 	}
 
-	if _, err := tx.Exec(query3); err != nil {
+	if _, err = tx.Exec(query3); err != nil {
 		return -1, err
 	}
 
-	if _, err := tx.Exec(query4); err != nil {
+	if _, err = tx.Exec(query4); err != nil {
 		return -1, err
 	}
 
@@ -120,7 +120,7 @@ func (q *Query) DeleteComponent(del_component models.DeleteComponentModel, wareh
 		}
 	}()
 
-	if _, err := tx.Exec(query1, del_component.ComponentID, warehouse_id); err != nil {
+	if _, err = tx.Exec(query1, del_component.ComponentID, warehouse_id); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -148,7 +148,7 @@ func (q *Query) CreateComponentUnit(warranty_date time.Time, cost float32, prifi
 	}()
 
 	for range number {
-		_, err := tx.Exec(query1, component_id, warehouse_id, warranty_date, cost)
+		_, err = tx.Exec(query1, component_id, warehouse_id, warranty_date, cost)
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
@@ -179,7 +179,7 @@ func (q *Query) AssignUnitWorkspace(workspace_id int, unit_id []int, prefix stri
 
 	var department_id int
 
-	if err := tx.QueryRow(query1, workspace_id).Scan(&department_id); err != nil {
+	if err = tx.QueryRow(query1, workspace_id).Scan(&department_id); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching department found")
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
@@ -189,7 +189,7 @@ func (q *Query) AssignUnitWorkspace(workspace_id int, unit_id []int, prefix stri
 	}
 
 	for _, unit := range unit_id {
-		if _, err := tx.Exec(query2, department_id, workspace_id, unit); err != nil {
+		if _, err = tx.Exec(query2, department_id, workspace_id, unit); err != nil {
 			log.Printf("error while assigning units: %v", err)
 			return http.StatusInternalServerError, fmt.Errorf("database error")
 		}
@@ -222,7 +222,8 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 	whereClause := fmt.Sprintf("WHERE workspace_id = %d ", id)
 
 	if sort.Search != "" {
-		id, err := strconv.Atoi(sort.Search)
+		var id int
+		id, err = strconv.Atoi(sort.Search)
 		if err == nil {
 			whereClause += fmt.Sprintf("AND (id = $%d OR department_id = $%d OR workspace_id = $%d OR unit_id = $%d OR created_at = $%d) ", argIndex, argIndex, argIndex, argIndex, argIndex)
 			args = append(args, id)
@@ -238,7 +239,8 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 							LIMIT $1 OFFSET $2
 							`, whereClause, sort.SortBy, sort.Order)
 
-	rows, err := tx.Query(query, args...)
+	var rows *sql.Rows
+	rows, err = tx.Query(query, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching data found : %v", err)
@@ -251,21 +253,21 @@ func (q *Query) GetAllIssues(id int, sort models.SortModel) (int, []models.Issue
 
 	for rows.Next() {
 		var issue models.IssueModel
-		if err := rows.Scan(&issue.IssueID, &issue.DepartmentID, &issue.WorkspaceID, &issue.UnitID, &issue.UnitPrefix, &issue.Issue, &issue.Created_at, &issue.Status); err != nil {
+		if err = rows.Scan(&issue.IssueID, &issue.DepartmentID, &issue.WorkspaceID, &issue.UnitID, &issue.UnitPrefix, &issue.Issue, &issue.Created_at, &issue.Status); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error occured while retrieving data")
 		}
 		issues = append(issues, issue)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("internal server error, please try again later")
 	}
 
 	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM issues %s`, whereClause)
 	var total int
-	if err := tx.QueryRow(countQuery).Scan(&total); err != nil {
+	if err = tx.QueryRow(countQuery).Scan(&total); err != nil {
 		log.Printf("error while scanning data: %v", err)
 		return http.StatusInternalServerError, []models.IssueModel{}, 0, fmt.Errorf("error occured while retrieving data")
 	}
@@ -292,7 +294,8 @@ func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllWarehou
 		}
 	}()
 
-	rows, err := tx.Query(query, warehouse_id)
+	var rows *sql.Rows
+	rows, err = tx.Query(query, warehouse_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no components found for user %v", warehouse_id)
@@ -305,7 +308,7 @@ func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllWarehou
 
 	for rows.Next() {
 		var component models.AllWarehouseComponentsModel
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&component.ComponentID,
 			&component.ComponentName,
 			&component.Prefix,
@@ -318,7 +321,7 @@ func (q *Query) GetAllWarehouseComponents(warehouse_id int) ([]models.AllWarehou
 
 		var units int
 
-		if err := tx.QueryRow(Query, component.ComponentID).Scan(&units); err != nil {
+		if err = tx.QueryRow(Query, component.ComponentID).Scan(&units); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, fmt.Errorf("error occured while retrieving data")
 		}
@@ -363,7 +366,8 @@ func (q *Query) GetAllWarehouseComponentUnits(component_id int) ([]models.AllCom
 	}
 
 	query2 := fmt.Sprintf(`SELECT id, warehouse_id, warranty_date, status, cost, maintainance_cost FROM %s_units WHERE component_id = $1`, prefix)
-	rows, err := tx.Query(query2, component_id)
+	var rows *sql.Rows
+	rows, err = tx.Query(query2, component_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", component_id)
@@ -376,7 +380,7 @@ func (q *Query) GetAllWarehouseComponentUnits(component_id int) ([]models.AllCom
 
 	for rows.Next() {
 		var unit models.AllComponentUnitsModel
-		if err := rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.WarrantyDate, &unit.Status, &unit.Cost, &unit.MaintenanceCost); err != nil {
+		if err = rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.WarrantyDate, &unit.Status, &unit.Cost, &unit.MaintenanceCost); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, fmt.Errorf("error occured while retrieving data")
 		}
@@ -384,7 +388,7 @@ func (q *Query) GetAllWarehouseComponentUnits(component_id int) ([]models.AllCom
 
 		var units_assigned int
 
-		if err := tx.QueryRow(query3, unit.UnitID).Scan(&units_assigned); err != nil {
+		if err = tx.QueryRow(query3, unit.UnitID).Scan(&units_assigned); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, fmt.Errorf("error occured while retrieving data")
 		}
@@ -452,7 +456,8 @@ func (q *Query) GetUnitAssignmentHistory(unit_id int) ([]models.HistoryModel, er
 		}
 	}()
 
-	rows, err := tx.Query(query, unit_id)
+	var rows *sql.Rows
+	rows, err = tx.Query(query, unit_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching data found")
@@ -466,7 +471,7 @@ func (q *Query) GetUnitAssignmentHistory(unit_id int) ([]models.HistoryModel, er
 
 	for rows.Next() {
 		var history models.HistoryModel
-		if err := rows.Scan(&history.WorkspaceID, &history.DepartmentID, &history.AssignedAt, &history.DeletedAt, &history.DeletedBy); err != nil {
+		if err = rows.Scan(&history.WorkspaceID, &history.DepartmentID, &history.AssignedAt, &history.DeletedAt, &history.DeletedBy); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, fmt.Errorf("error occured while retrieving data")
 		}
@@ -527,7 +532,8 @@ func (q *Query) GetAssignedUnits(prefix string, workspace_id, limit, offset int)
 		}
 	}()
 
-	rows, err := tx.Query(query, workspace_id, limit, offset)
+	var rows *sql.Rows
+	rows, err = tx.Query(query, workspace_id, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
@@ -540,21 +546,21 @@ func (q *Query) GetAssignedUnits(prefix string, workspace_id, limit, offset int)
 
 	for rows.Next() {
 		var unit models.AssignedUnitsModel
-		if err := rows.Scan(&unit.UnitID, &unit.WorkspaceID, &unit.DepartmentID); err != nil {
+		if err = rows.Scan(&unit.UnitID, &unit.WorkspaceID, &unit.DepartmentID); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, -1, fmt.Errorf("error occured while retrieving data")
 		}
 		units = append(units, unit)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return nil, -1, fmt.Errorf("internal server error, please try again later")
 	}
 
 	countQuery := fmt.Sprintf(query1, prefix)
 	var total int
-	if err := tx.QueryRow(countQuery, workspace_id).Scan(&total); err != nil {
+	if err = tx.QueryRow(countQuery, workspace_id).Scan(&total); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
 			return nil, 0, fmt.Errorf("no units found")
@@ -615,7 +621,7 @@ func (q *Query) DeleteUnit(unit_id int, prefix string, user_id int) (int, error)
 		}
 	}()
 
-	if _, err := tx.Exec(query1, unit_id, user_id); err != nil {
+	if _, err = tx.Exec(query1, unit_id, user_id); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no matching data found")
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
@@ -624,7 +630,7 @@ func (q *Query) DeleteUnit(unit_id int, prefix string, user_id int) (int, error)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if _, err := tx.Exec(query2, unit_id, user_id); err != nil {
+	if _, err = tx.Exec(query2, unit_id, user_id); err != nil {
 		log.Printf("error while deleting unit: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}

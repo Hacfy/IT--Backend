@@ -9,7 +9,7 @@ type DepartmentModel struct {
 }
 
 type CreateDepartmentModel struct {
-	DepartmentName      string `json:"department_id" validate:"required"`
+	DepartmentName      string `json:"department_name" validate:"required"`
 	DepartmentHeadName  string `json:"department_head_name" validate:"required"`
 	DepartmentHeadEmail string `json:"department_head_email" validate:"required,email"`
 }

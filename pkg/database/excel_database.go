@@ -28,7 +28,9 @@ func (q *Query) GetAllComponentUnits(prefix string) ([]models.ExcelMaintenanceRe
 		}
 	}()
 
-	rows, err := tx.Query(query, prefix)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query, prefix)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
@@ -41,13 +43,13 @@ func (q *Query) GetAllComponentUnits(prefix string) ([]models.ExcelMaintenanceRe
 
 	for rows.Next() {
 		var unit models.ExcelMaintenanceReportModel
-		if err := rows.Scan(&unit.UnitID, &unit.WarrantyDate, &unit.Status, &unit.Cost, &unit.MaintenanceCost, &unit.LastMaintenanceDate); err != nil {
+		if err = rows.Scan(&unit.UnitID, &unit.WarrantyDate, &unit.Status, &unit.Cost, &unit.MaintenanceCost, &unit.LastMaintenanceDate); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, err
 		}
 		query1 := "SELECT department_id, workspace_id FROM %s_units_assigned WHERE unit_id = $1"
 		var department_id, workspace_id int
-		if err := tx.QueryRow(query1, prefix).Scan(&department_id, &workspace_id); err != nil {
+		if err = tx.QueryRow(query1, prefix).Scan(&department_id, &workspace_id); err != nil {
 			log.Printf("unit not assigned to any department or workspace: %v", unit.UnitID)
 			unit.DepartmentID = "N/A"
 			unit.WorkspaceID = "N/A"
@@ -60,7 +62,7 @@ func (q *Query) GetAllComponentUnits(prefix string) ([]models.ExcelMaintenanceRe
 		units = append(units, unit)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return nil, err
 	}
@@ -88,7 +90,9 @@ func (q *Query) GetAllComponentsPrefix(warehouse_id int) ([]models.ExcelPrefixRe
 		}
 	}()
 
-	rows, err := tx.Query(query, warehouse_id)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query, warehouse_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no components found for warehouse %v", warehouse_id)
@@ -101,14 +105,14 @@ func (q *Query) GetAllComponentsPrefix(warehouse_id int) ([]models.ExcelPrefixRe
 
 	for rows.Next() {
 		var component models.ExcelPrefixReportModel
-		if err := rows.Scan(&component.ComponentName, &component.ComponentID, &component.Prefix); err != nil {
+		if err = rows.Scan(&component.ComponentName, &component.ComponentID, &component.Prefix); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, err
 		}
 		components = append(components, component)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return nil, err
 	}

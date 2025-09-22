@@ -30,7 +30,8 @@ func (q *Query) GetAllDepartments(branch_id int, sort models.SortModel) (int, []
 	whereClause := fmt.Sprintf("WHERE d.branch_id = %d ", branch_id)
 
 	if sort.Search != "" {
-		id, err := strconv.Atoi(sort.Search)
+		var id int
+		id, err = strconv.Atoi(sort.Search)
 		if err == nil {
 			whereClause += fmt.Sprintf("AND (d.department_id = %d OR  dh.id = %d OR w.id = %d )", id, id, id)
 		} else {
@@ -60,7 +61,9 @@ func (q *Query) GetAllDepartments(branch_id int, sort models.SortModel) (int, []
 		FROM departments d
 		WHERE branch_id = $1`
 
-	rows, err := tx.Query(query1, sort.Limit, sort.Offset)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query1, sort.Limit, sort.Offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no departments with branch_id %v found: %v", branch_id, err)
@@ -75,7 +78,7 @@ func (q *Query) GetAllDepartments(branch_id int, sort models.SortModel) (int, []
 
 	for rows.Next() {
 		var dept models.AllDepartmentsModel
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&dept.DepartmentID,
 			&dept.DepartmentName,
 			&dept.DepartmentHeadName,
@@ -119,7 +122,9 @@ func (q *Query) GetDepartmentIssues(department_id int, sort models.SortModel) (i
 	whereClause := fmt.Sprintf("WHERE d.department_id = %d ", department_id)
 
 	if sort.Search != "" {
-		id, err := strconv.Atoi(sort.Search)
+		var id int
+
+		id, err = strconv.Atoi(sort.Search)
 		if err == nil {
 			whereClause += fmt.Sprintf("AND (d.department_id = %d OR  i.id = %d OR w.id = %d )", id, id, id)
 		} else {
@@ -149,7 +154,9 @@ func (q *Query) GetDepartmentIssues(department_id int, sort models.SortModel) (i
 		FROM issues i
 		WHERE i.department_id = $1`
 
-	rows, err := tx.Query(query1, sort.Limit, sort.Offset)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query1, sort.Limit, sort.Offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no issues with department_id %v found: %v", department_id, err)
@@ -209,7 +216,9 @@ func (q *Query) GetAllWorkspaces(department_id int, sort models.SortModel) (int,
 	whereClause := fmt.Sprintf("WHERE w.department_id = %d ", department_id)
 
 	if sort.Search != "" {
-		id, err := strconv.Atoi(sort.Search)
+		var id int
+
+		id, err = strconv.Atoi(sort.Search)
 		if err == nil {
 			whereClause += fmt.Sprintf("AND (w.id = %d OR  w.department_id = %d )", id, id)
 		} else {
@@ -233,7 +242,9 @@ func (q *Query) GetAllWorkspaces(department_id int, sort models.SortModel) (int,
 		FROM workspaces w
 		WHERE w.department_id = $1`
 
-	rows, err := tx.Query(query1, sort.Limit, sort.Offset)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query1, sort.Limit, sort.Offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no workspaces with department_id %v found: %v", department_id, err)
@@ -247,7 +258,7 @@ func (q *Query) GetAllWorkspaces(department_id int, sort models.SortModel) (int,
 	var Workspaces []models.DepartmentWorkspaceModel
 	for rows.Next() {
 		var workspace models.DepartmentWorkspaceModel
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&workspace.WorkspaceID,
 			&workspace.WorkspaceName,
 		); err != nil {
@@ -287,7 +298,9 @@ func (q *Query) GetAllBranches(super_admin_id int, sort models.SortModel) (int, 
 	whereClause := fmt.Sprintf("WHERE b.super_admin_id = %d ", super_admin_id)
 
 	if sort.Search != "" {
-		id, err := strconv.Atoi(sort.Search)
+		var id int
+
+		id, err = strconv.Atoi(sort.Search)
 		if err == nil {
 			whereClause += fmt.Sprintf("AND (b.branch_id = %d )", id)
 		} else {
@@ -314,7 +327,9 @@ func (q *Query) GetAllBranches(super_admin_id int, sort models.SortModel) (int, 
 			FROM branches b
 			WHERE b.super_admin_id = $1`
 
-	rows, err := tx.Query(query1, sort.Limit, sort.Offset)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query1, sort.Limit, sort.Offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no branches with super_admin_id %v found: %v", super_admin_id, err)
@@ -329,7 +344,7 @@ func (q *Query) GetAllBranches(super_admin_id int, sort models.SortModel) (int, 
 
 	for rows.Next() {
 		var branch models.AllBranchesModel
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&branch.BranchID,
 			&branch.BranchName,
 			&branch.BranchLocation,
@@ -524,7 +539,9 @@ func (q *Query) GetAllOutOfWarehouseUnitsInWarehouse(warehouse_id, limit, offset
 		}
 	}()
 
-	rows, err := tx.Query(query, limit, offset)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
@@ -546,14 +563,14 @@ func (q *Query) GetAllOutOfWarehouseUnitsInWarehouse(warehouse_id, limit, offset
 		OutOfWarehouseUnits = append(OutOfWarehouseUnits, unit)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return http.StatusInternalServerError, []models.AllOutOfWarentyWarehouseModel{}, -1, fmt.Errorf("internal server error, please try again later")
 	}
 
 	countQuery := fmt.Sprintf(query1, prefix)
 	var total int
-	if err := tx.QueryRow(countQuery).Scan(&total); err != nil {
+	if err = tx.QueryRow(countQuery).Scan(&total); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
 			return http.StatusNotFound, []models.AllOutOfWarentyWarehouseModel{}, 0, fmt.Errorf("no units found")
@@ -585,7 +602,9 @@ func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits mo
 		}
 	}()
 
-	rows, err := tx.Query(query, getAllOutOfWarehouseUnits.DepartmentID, limit, offset)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query, getAllOutOfWarehouseUnits.DepartmentID, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
@@ -600,21 +619,21 @@ func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits mo
 
 	for rows.Next() {
 		var unit models.AllOutOfWarentyUnitsModel
-		if err := rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.ExpiredOn); err != nil {
+		if err = rows.Scan(&unit.UnitID, &unit.WarehouseID, &unit.ExpiredOn); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("error occured while retrieving data")
 		}
 		OutOfWarentyUnits = append(OutOfWarentyUnits, unit)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		log.Printf("row iteration error: %v", err)
 		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, fmt.Errorf("internal server error, please try again later")
 	}
 
 	countQuery := fmt.Sprintf(query1, prefix, prefix)
 	var total int
-	if err := tx.QueryRow(countQuery, getAllOutOfWarehouseUnits.DepartmentID).Scan(&total); err != nil {
+	if err = tx.QueryRow(countQuery, getAllOutOfWarehouseUnits.DepartmentID).Scan(&total); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
 			return http.StatusNotFound, []models.AllOutOfWarentyUnitsModel{}, 0, fmt.Errorf("no units found")

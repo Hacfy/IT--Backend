@@ -12,8 +12,10 @@ import (
 func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error) {
 	var sa_id int
 
+	var err error
+
 	query1 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query2 := "INSERT INTO super_admins(org_id, name, email, password) VALUES($1, $2, $3, $4) RETRUNING id"
+	query2 := "INSERT INTO super_admins(org_id, name, email, password) VALUES($1, $2, $3, $4) RETURNING id"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -30,11 +32,11 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 		}
 	}()
 
-	if _, err := tx.Exec(query1, superAdmin.SuperAdminEmail, "super_admins"); err != nil {
+	if _, err = tx.Exec(query1, superAdmin.SuperAdminEmail, "super_admins"); err != nil {
 		return -1, err
 	}
 
-	if err := tx.QueryRow(query2, superAdmin.Org_ID, superAdmin.SuperAdminName, superAdmin.SuperAdminEmail, superAdmin.SuperAdminPassword).Scan(&sa_id); err != nil {
+	if err = tx.QueryRow(query2, superAdmin.Org_ID, superAdmin.SuperAdminName, superAdmin.SuperAdminEmail, superAdmin.SuperAdminPassword).Scan(&sa_id); err != nil {
 		return -1, err
 	}
 
@@ -48,6 +50,8 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 	query1 := "DELETE FROM super_admins WHERE email = $1 RETURNING org_id, id"
 	query3 := "DELETE FROM users WHERE user_email = $1"
 	query2 := "INSERT INTO deleted_super_admins(super_admin_id, org_id, email) VALUES($1, $2, $3)"
+
+	var err error
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -66,7 +70,7 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 
 	var exists bool
 
-	if err := tx.QueryRow(query0, superAdminID).Scan(&exists); err != nil {
+	if err = tx.QueryRow(query0, superAdminID).Scan(&exists); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -77,21 +81,21 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 		return http.StatusConflict, fmt.Errorf("super_admin has branches associated with it")
 	}
 
-	if err := tx.QueryRow(query1, superAdminEmail).Scan(&supersuperAdminOrgID, &superAdminID); err != nil {
+	if err = tx.QueryRow(query1, superAdminEmail).Scan(&supersuperAdminOrgID, &superAdminID); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if _, err := tx.Exec(query2, superAdminID, supersuperAdminOrgID, superAdminEmail); err != nil {
+	if _, err = tx.Exec(query2, superAdminID, supersuperAdminOrgID, superAdminEmail); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if _, err := tx.Exec(query3, superAdminEmail); err != nil {
+	if _, err = tx.Exec(query3, superAdminEmail); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -104,6 +108,8 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsDetailsModel, error) {
 	query1 := "SELECT id, name, email FROM super_admins WHERE org_id = $1"
 	query2 := "SELECT COUNT(*) FROM branches WHERE super_admin_id = $1"
+
+	var err error
 
 	var superAdmins []models.AllSuperAdminsDetailsModel
 	tx, err := q.db.Begin()
@@ -121,7 +127,9 @@ func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsD
 		}
 	}()
 
-	rows, err := tx.Query(query1, organisation_id)
+	var rows *sql.Rows
+
+	rows, err = tx.Query(query1, organisation_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no superAdmins found for organisation %v", organisation_id)
@@ -134,7 +142,7 @@ func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsD
 
 	for rows.Next() {
 		var superAdmin models.AllSuperAdminsDetailsModel
-		if err := rows.Scan(&superAdmin.SuperAdminID, &superAdmin.SuperAdminName, &superAdmin.SuperAdminEmail); err != nil {
+		if err = rows.Scan(&superAdmin.SuperAdminID, &superAdmin.SuperAdminName, &superAdmin.SuperAdminEmail); err != nil {
 			log.Printf("error while scanning data: %v", err)
 			return nil, fmt.Errorf("error while scanning data")
 		}
