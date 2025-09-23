@@ -15,7 +15,7 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 	var err error
 
 	query1 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query2 := "INSERT INTO super_admins(org_id, name, email, password) VALUES($1, $2, $3, $4) RETURNING id"
+	query2 := "INSERT INTO super_admin(org_id, name, email, password) VALUES($1, $2, $3, $4) RETURNING id"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -32,7 +32,7 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 		}
 	}()
 
-	if _, err = tx.Exec(query1, superAdmin.SuperAdminEmail, "super_admins"); err != nil {
+	if _, err = tx.Exec(query1, superAdmin.SuperAdminEmail, "super_admin"); err != nil {
 		return -1, err
 	}
 
@@ -47,9 +47,9 @@ func (q *Query) CreateSuperAdmin(superAdmin models.SuperAdminModel) (int, error)
 func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 	var superAdminID, supersuperAdminOrgID int
 	query0 := "SELECT EXISTS(SELECT 1 FROM branches WHERE super_admin_id = $1)"
-	query1 := "DELETE FROM super_admins WHERE email = $1 RETURNING org_id, id"
+	query1 := "DELETE FROM super WHERE email = $1 RETURNING org_id, id"
 	query3 := "DELETE FROM users WHERE user_email = $1"
-	query2 := "INSERT INTO deleted_super_admins(super_admin_id, org_id, email) VALUES($1, $2, $3)"
+	query2 := "INSERT INTO deleted_super_admin(super_admin_id, org_id, email) VALUES($1, $2, $3)"
 
 	var err error
 
@@ -105,8 +105,8 @@ func (q *Query) DeleteSuperAdmin(superAdminEmail string) (int, error) {
 	return http.StatusNoContent, nil
 }
 
-func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsDetailsModel, error) {
-	query1 := "SELECT id, name, email FROM super_admins WHERE org_id = $1"
+func (q *Query) GetAllSuperAdmins(organization_id int) ([]models.AllSuperAdminsDetailsModel, error) {
+	query1 := "SELECT id, name, email FROM super_admin WHERE org_id = $1"
 	query2 := "SELECT COUNT(*) FROM branches WHERE super_admin_id = $1"
 
 	var err error
@@ -129,11 +129,11 @@ func (q *Query) GetAllSuperAdmins(organisation_id int) ([]models.AllSuperAdminsD
 
 	var rows *sql.Rows
 
-	rows, err = tx.Query(query1, organisation_id)
+	rows, err = tx.Query(query1, organization_id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("no superAdmins found for organisation %v", organisation_id)
-			return nil, fmt.Errorf("no superAdmins found for organisation %v", organisation_id)
+			log.Printf("no superAdmins found for organization %v", organization_id)
+			return nil, fmt.Errorf("no superAdmins found for organization %v", organization_id)
 		}
 		log.Printf("error while querying data: %v", err)
 		return nil, fmt.Errorf("error while querying data")
@@ -169,7 +169,7 @@ func (q *Query) ReassignSuperAdmin(superAdmin models.ReassignSuperAdminModel, or
 	return http.StatusOK, nil
 }
 
-//query to get all the branches of a perticular organisation
+//query to get all the branches of a perticular organization
 // SELECT
 //     d.department_id,
 //     d.department_name,
@@ -179,7 +179,7 @@ func (q *Query) ReassignSuperAdmin(superAdmin models.ReassignSuperAdminModel, or
 // FROM
 //     departments d
 // JOIN branches b ON d.branch_id = b.branch_id
-// JOIN organisations o ON b.org_id = o.id
+// JOIN organization o ON b.org_id = o.id
 // LEFT JOIN department_heads dh ON d.department_id = dh.department_id
 // LEFT JOIN workspaces w ON d.department_id = w.department_id
 // LEFT JOIN issues i ON d.department_id = i.department_id

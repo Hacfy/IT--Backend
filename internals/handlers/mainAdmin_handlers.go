@@ -57,8 +57,8 @@ func (ma *MainAdminHandler) LoginMainAdminHandler(e echo.Context) error {
 	})
 }
 
-func (ma *MainAdminHandler) CreateOrganisationHandler(e echo.Context) error {
-	status, err := ma.MainAdminRepo.CreateOrganisation(e)
+func (ma *MainAdminHandler) CreateorganizationHandler(e echo.Context) error {
+	status, err := ma.MainAdminRepo.Createorganization(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
 	}
@@ -79,8 +79,8 @@ func (ma *MainAdminHandler) DeleteMainAdminHandler(e echo.Context) error {
 	})
 }
 
-func (ma *MainAdminHandler) DeleteOrganisationHandler(e echo.Context) error {
-	status, err := ma.MainAdminRepo.DeleteOrganisation(e)
+func (ma *MainAdminHandler) DeleteorganizationHandler(e echo.Context) error {
+	status, err := ma.MainAdminRepo.Deleteorganization(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
 	}
@@ -90,16 +90,16 @@ func (ma *MainAdminHandler) DeleteOrganisationHandler(e echo.Context) error {
 	})
 }
 
-func (ma *MainAdminHandler) GetAllOrganisationsHandler(e echo.Context) error {
-	status, orgs, err := ma.MainAdminRepo.GetAllOrganisations(e)
+func (ma *MainAdminHandler) GetAllorganizationHandler(e echo.Context) error {
+	status, orgs, err := ma.MainAdminRepo.GetAllorganization(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
 	}
 
 	return e.JSON(status, echo.Map{
-		"message":             "successfull",
-		"organisations":       orgs,
-		"no_of_organisations": len(orgs),
+		"message":            "successfull",
+		"organization":       orgs,
+		"no_of_organization": len(orgs),
 	})
 }
 

@@ -5,17 +5,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type OrganisationHandler struct {
-	OrgRepo models.OrganisationInterface
+type OrganizationHandler struct {
+	OrgRepo models.OrganizationInterface
 }
 
-func NewOrganisationHandler(organisaion models.OrganisationInterface) *OrganisationHandler {
-	return &OrganisationHandler{
+func NeworganizationHandler(organisaion models.OrganizationInterface) *OrganizationHandler {
+	return &OrganizationHandler{
 		OrgRepo: organisaion,
 	}
 }
 
-func (oh *OrganisationHandler) CreateSuperAdminHandler(e echo.Context) error {
+func (oh *OrganizationHandler) CreateSuperAdminHandler(e echo.Context) error {
 	status, err := oh.OrgRepo.CreateSuperAdmin(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
@@ -25,7 +25,7 @@ func (oh *OrganisationHandler) CreateSuperAdminHandler(e echo.Context) error {
 	})
 }
 
-func (oh *OrganisationHandler) DeleteSuperAdminHandler(e echo.Context) error {
+func (oh *OrganizationHandler) DeleteSuperAdminHandler(e echo.Context) error {
 	status, err := oh.OrgRepo.DeleteSuperAdmin(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
@@ -36,7 +36,7 @@ func (oh *OrganisationHandler) DeleteSuperAdminHandler(e echo.Context) error {
 	})
 }
 
-func (oh *OrganisationHandler) GetAllSuperAdminsHandler(e echo.Context) error {
+func (oh *OrganizationHandler) GetAllSuperAdminsHandler(e echo.Context) error {
 	status, superAdmins, err := oh.OrgRepo.GetAllSuperAdmins(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())
@@ -48,7 +48,7 @@ func (oh *OrganisationHandler) GetAllSuperAdminsHandler(e echo.Context) error {
 	})
 }
 
-func (oh *OrganisationHandler) ReassignSuperAdminHandler(e echo.Context) error {
+func (oh *OrganizationHandler) ReassignSuperAdminHandler(e echo.Context) error {
 	status, err := oh.OrgRepo.ReassignSuperAdmin(e)
 	if err != nil {
 		return echo.NewHTTPError(status, err.Error())

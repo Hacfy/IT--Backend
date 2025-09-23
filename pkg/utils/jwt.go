@@ -29,12 +29,12 @@ func GenerateMainAdminToken(mainAdmin models.MainAdminModel) (string, error) {
 	return signedToken, nil
 }
 
-func GenerateOrganisationToken(organisation models.OrganisationModel) (string, error) {
+func GenerateorganizationToken(organization models.OrganizationModel) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"organisation_id":            organisation.OrganisationID,
-		"organisation_email":         organisation.OrganisationEmail,
-		"organisation_main_admin_id": organisation.OrganisationMainAdminID,
+		"organization_id":            organization.OrganizationID,
+		"organization_email":         organization.OrganizationEmail,
+		"organization_main_admin_id": organization.OrganizationMainAdminID,
 		"exp":                        time.Now().Local().Add(7 * 24 * time.Hour).Unix(),
 	})
 

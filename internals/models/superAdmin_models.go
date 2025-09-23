@@ -28,7 +28,7 @@ type SuperAdminInterface interface {
 }
 
 type GetAllSuperAdminsModel struct {
-	OrganisationID int `json:"organisation_id" validate:"required"`
+	OrganizationID int `json:"organization_id" validate:"required"`
 }
 
 type AllSuperAdminsDetailsModel struct {

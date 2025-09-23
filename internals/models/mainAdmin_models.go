@@ -33,11 +33,11 @@ type GetAllMainAdminModel struct {
 
 type MainAdminInterface interface {
 	CreateMainAdmin(echo.Context) (int, error)
-	CreateOrganisation(echo.Context) (int, error)
+	Createorganization(echo.Context) (int, error)
 	LoginMainAdmin(echo.Context) (int, string, string, string, error)
 	DeleteMainAdmin(echo.Context) (int, error)
-	DeleteOrganisation(echo.Context) (int, error)
-	GetAllOrganisations(echo.Context) (int, []GetAllOrganisationsModel, error)
+	Deleteorganization(echo.Context) (int, error)
+	GetAllorganization(echo.Context) (int, []GetAllOrganizationModel, error)
 	GetAllMainAdmins(echo.Context) (int, []AllMainAdminModel, error)
 }
 

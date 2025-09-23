@@ -11,10 +11,10 @@ import (
 
 func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, hashedPassword string) error {
 	var branch_org_id, branch_id int
-	query1 := "SELECT org_id FROM super_admins WHERE id = $1"
+	query1 := "SELECT org_id FROM super_admin WHERE id = $1"
 	query2 := "INSERT INTO branches(org_id, super_admin_id, branch_name, branch_location) VALUES($1, $2, $3, $4) RETURNING branch_id"
 	query3 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query4 := "INSERT INTO branch_heads(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
+	query4 := "INSERT INTO branch(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -39,7 +39,7 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 		return err
 	}
 
-	if _, err = tx.Exec(query3, branch.BranchHeadEmail, "branch_heads"); err != nil {
+	if _, err = tx.Exec(query3, branch.BranchHeadEmail, "branch_head"); err != nil {
 		return err
 	}
 
@@ -78,11 +78,11 @@ func (q *Query) DeleteBranch(branch models.DeleteBranchModel, superAdminID int) 
 }
 
 func (q *Query) UpdateBranchHead(branchHead models.UpdateBranchHeadModel, superAdminID int, password string) (int, error) {
-	query1 := "DELETE FROM branch_heads WHERE id =$1 RETURNING branch_id"
+	query1 := "DELETE FROM branch_head WHERE id =$1 RETURNING branch_id"
 	query2 := "DELETE FROM users WHERE user_email = $1"
-	query3 := "INSERT INTO deleted_branch_heads(branch_id, branch_head_id, email, deleted_by) VALUES($1, $2, $3, $4)"
+	query3 := "INSERT INTO deleted_branch_head(branch_id, branch_head_id, email, deleted_by) VALUES($1, $2, $3, $4)"
 	query4 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query5 := "INSERT INTO branch_heads(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
+	query5 := "INSERT INTO branch_head(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -116,7 +116,7 @@ func (q *Query) UpdateBranchHead(branchHead models.UpdateBranchHeadModel, superA
 		return http.StatusInternalServerError, err
 	}
 
-	if _, err = tx.Exec(query4, branchHead.NewBranchHeadEmail, "branch_heads"); err != nil {
+	if _, err = tx.Exec(query4, branchHead.NewBranchHeadEmail, "branch_head"); err != nil {
 		return http.StatusInternalServerError, err
 	}
 

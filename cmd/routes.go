@@ -25,9 +25,9 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/main_admin/register", mainAdminHandler.CreateMainAdminHandler)                 //
 	e.POST("/main_admin/login", mainAdminHandler.LoginMainAdminHandler)                     //
 	e.DELETE("/main_admin/delete/main_admin", mainAdminHandler.DeleteMainAdminHandler)      //
-	e.POST("/main_admin/create/organisation", mainAdminHandler.CreateOrganisationHandler)   //
-	e.DELETE("/main_admin/delete/organisation", mainAdminHandler.DeleteOrganisationHandler) //
-	e.GET("/main_admin/get/all/organisations", mainAdminHandler.GetAllOrganisationsHandler) //
+	e.POST("/main_admin/create/organization", mainAdminHandler.CreateorganizationHandler)   //
+	e.DELETE("/main_admin/delete/organization", mainAdminHandler.DeleteorganizationHandler) //
+	e.GET("/main_admin/get/all/organization", mainAdminHandler.GetAllorganizationHandler)   //
 	e.GET("/main_admin/get/all/main_admins", mainAdminHandler.GetAllMainAdminsHandler)      //
 	//write main_adim middleware
 
@@ -40,15 +40,15 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 	e.POST("/auth/forgot/password", authHandler.ForgotPasswordHandler)                     //
 	e.POST("/auth/verify/forgot/password", authHandler.VerifyForgotPasswordRequestHandler) //
 
-	organisatoinHandler := handlers.NewOrganisationHandler(repository.NewOrgRepo(db))
+	organisatoinHandler := handlers.NeworganizationHandler(repository.NewOrgRepo(db))
 
-	// e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admins", "organisations", "branch_heads", "department_heads", "warehouses"))
+	// e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admins", "organization", "branch_heads", "department_heads", "warehouses"))
 
-	e.POST("/organisation/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)              //
-	e.DELETE("/organisation/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)            //
-	e.GET("/organisation/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)            //
-	e.POST("/organisation/reassign/superAdmin/branches", organisatoinHandler.ReassignSuperAdminHandler) //
-	//GET /organisation/get/details
+	e.POST("/organization/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)              //
+	e.DELETE("/organization/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)            //
+	e.GET("/organization/get/all/superAdmins", organisatoinHandler.GetAllSuperAdminsHandler)            //
+	e.POST("/organization/reassign/superAdmin/branches", organisatoinHandler.ReassignSuperAdminHandler) //
+	//GET /organization/get/details
 
 	superAdminHandler := handlers.NewSuperAdminHandler(repository.NewSuperAdminRepo(db))
 

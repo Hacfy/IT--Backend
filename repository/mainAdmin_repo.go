@@ -147,7 +147,7 @@ func (ma *MainAdminRepo) LoginMainAdmin(e echo.Context) (int, string, string, st
 
 }
 
-func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
+func (ma *MainAdminRepo) Createorganization(e echo.Context) (int, error) {
 
 	var tokenModel models.MainAdminTokenModel
 
@@ -188,7 +188,7 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 		return http.StatusUnauthorized, fmt.Errorf("invalid main admin details")
 	}
 
-	var new_org models.CreateOrganisationModel
+	var new_org models.CreateOrganizationModel
 
 	if err = e.Bind(&new_org); err != nil {
 		log.Printf("failed to decode request: %v", err)
@@ -200,10 +200,10 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failded to validate request")
 	}
 
-	createOrganisationPassword := os.Getenv("ORGANISATION_PASSWORD")
+	createorganizationPassword := os.Getenv("ORGANIZATION_PASSWORD")
 
-	if new_org.CreateOrganisationPassword != createOrganisationPassword {
-		log.Printf("wrong create_organisation_password")
+	if new_org.CreateOrganizationPassword != createorganizationPassword {
+		log.Printf("wrong create_organization_password")
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
 
@@ -227,30 +227,30 @@ func (ma *MainAdminRepo) CreateOrganisation(e echo.Context) (int, error) {
 		return http.StatusInternalServerError, fmt.Errorf("failed to secure your password, please try again")
 	}
 
-	var organisation models.OrganisationModel
+	var organization models.OrganizationModel
 
-	organisation.OrganisationEmail = new_org.OrganisationEmail
+	organization.OrganizationEmail = new_org.OrganizationEmail
 
-	organisation.OrganisationName = strings.ToLower(new_org.OrganisationName)
+	organization.OrganizationName = strings.ToLower(new_org.OrganizationName)
 
-	organisation.OrganisationPhoneNumber = new_org.OrganisationPhoneNumber
+	organization.OrganizationPhoneNumber = new_org.OrganizationPhoneNumber
 
-	organisation.OrganisationPassword = hash
+	organization.OrganizationPassword = hash
 
-	organisation.OrganisationMainAdminID = claims.MainAdminID
+	organization.OrganizationMainAdminID = claims.MainAdminID
 
-	organisation.OrganisationID, err = query.CreateOrganisation(organisation)
+	organization.OrganizationID, err = query.Createorganization(organization)
 	if err != nil {
-		log.Printf("error while storing organisation data in DB: %v", err)
-		return http.StatusInternalServerError, fmt.Errorf("unable to register organisation at the moment, please try again later")
+		log.Printf("error while storing organization data in DB: %v", err)
+		return http.StatusInternalServerError, fmt.Errorf("unable to register organization at the moment, please try again later")
 	}
 
 	go func() {
-		log.Printf("sending login credentials to %v", organisation.OrganisationEmail)
-		if err := utils.SendLoginCredentials(organisation.OrganisationEmail, password); err != nil {
-			log.Printf("error while sending login credentials to %v: %v", organisation.OrganisationEmail, err)
+		log.Printf("sending login credentials to %v", organization.OrganizationEmail)
+		if err := utils.SendLoginCredentials(organization.OrganizationEmail, password); err != nil {
+			log.Printf("error while sending login credentials to %v: %v", organization.OrganizationEmail, err)
 		}
-		log.Printf("credentials sent to %v", organisation.OrganisationEmail)
+		log.Printf("credentials sent to %v", organization.OrganizationEmail)
 	}()
 
 	return http.StatusCreated, nil
@@ -322,7 +322,7 @@ func (ma *MainAdminRepo) DeleteMainAdmin(e echo.Context) (int, error) {
 	return status, nil
 }
 
-func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
+func (ma *MainAdminRepo) Deleteorganization(e echo.Context) (int, error) {
 
 	var tokenModel models.MainAdminTokenModel
 
@@ -360,7 +360,7 @@ func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
 		return http.StatusUnauthorized, fmt.Errorf("invalid main admin details")
 	}
 
-	var del_org models.DeleteOrganisationModel
+	var del_org models.DeleteOrganizationModel
 
 	if err = e.Bind(&del_org); err != nil {
 		log.Printf("failed to decode request: %v", err)
@@ -372,29 +372,29 @@ func (ma *MainAdminRepo) DeleteOrganisation(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failded to validate request")
 	}
 
-	deleteOrganisationPassword := os.Getenv("ORGANISATION_PASSWORD")
+	deleteorganizationPassword := os.Getenv("ORGANIZATION_PASSWORD")
 
-	if del_org.DeleteOrganisationPassword != deleteOrganisationPassword {
-		log.Printf("wrong delete_organisation_password")
+	if del_org.DeleteOrganizationPassword != deleteorganizationPassword {
+		log.Printf("wrong delete_organization_password")
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
 
-	status, err := query.DeleteOrganisation(del_org.OrganisationEmail, del_org.OrganisationID, claims.MainAdminID)
+	status, err := query.Deleteorganization(del_org.OrganizationEmail, del_org.OrganizationID, claims.MainAdminID)
 	if err != nil {
-		log.Printf("error while deleting the organisation %v: %v", del_org.OrganisationEmail, err)
-		return status, fmt.Errorf("error while deleting organisation, please try again later")
+		log.Printf("error while deleting the organization %v: %v", del_org.OrganizationEmail, err)
+		return status, fmt.Errorf("error while deleting organization, please try again later")
 	}
 
 	return status, nil
 }
 
-func (ma *MainAdminRepo) GetAllOrganisations(e echo.Context) (int, []models.GetAllOrganisationsModel, error) {
+func (ma *MainAdminRepo) GetAllorganization(e echo.Context) (int, []models.GetAllOrganizationModel, error) {
 	var tokenModel models.MainAdminTokenModel
 
 	tokenString := e.Request().Header.Get("Authorization")
 	if tokenString == "" {
 		log.Printf("missgin token")
-		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("missing token")
+		return http.StatusUnauthorized, []models.GetAllOrganizationModel{}, fmt.Errorf("missing token")
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -405,13 +405,13 @@ func (ma *MainAdminRepo) GetAllOrganisations(e echo.Context) (int, []models.GetA
 
 	if err != nil {
 		log.Printf("invalid token: %v", err)
-		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("invalid token")
+		return http.StatusUnauthorized, []models.GetAllOrganizationModel{}, fmt.Errorf("invalid token")
 	}
 
 	claims, ok := token.Claims.(*models.MainAdminTokenModel)
 	if !(ok && token.Valid) {
 		log.Printf("token expired or not of MainAdminTokenModel")
-		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("invalid token")
+		return http.StatusUnauthorized, []models.GetAllOrganizationModel{}, fmt.Errorf("invalid token")
 	}
 
 	query := database.NewDBinstance(ma.db)
@@ -419,16 +419,16 @@ func (ma *MainAdminRepo) GetAllOrganisations(e echo.Context) (int, []models.GetA
 	ok, err = query.VerifyMainAdmin(claims.MainAdminEmail, claims.MainAdminID)
 	if err != nil {
 		log.Printf("Error checking main admin details: %v", err)
-		return http.StatusInternalServerError, []models.GetAllOrganisationsModel{}, fmt.Errorf("database error")
+		return http.StatusInternalServerError, []models.GetAllOrganizationModel{}, fmt.Errorf("database error")
 	} else if !ok {
 		log.Printf("Invalid main admin details")
-		return http.StatusUnauthorized, []models.GetAllOrganisationsModel{}, fmt.Errorf("invalid main admin details")
+		return http.StatusUnauthorized, []models.GetAllOrganizationModel{}, fmt.Errorf("invalid main admin details")
 	}
 
-	orgs, err := query.GetAllOrganisations(claims.MainAdminID)
+	orgs, err := query.GetAllorganization(claims.MainAdminID)
 	if err != nil {
-		log.Println("Error while getting organisations:", err)
-		return http.StatusInternalServerError, []models.GetAllOrganisationsModel{}, fmt.Errorf("database error")
+		log.Println("Error while getting organization:", err)
+		return http.StatusInternalServerError, []models.GetAllOrganizationModel{}, fmt.Errorf("database error")
 	}
 
 	return http.StatusOK, orgs, nil

@@ -51,14 +51,14 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
 
-	if claims.UserType != "super_admins" {
-		log.Printf("invalid userType, required userType %v given %v", "super_admins", claims.UserType)
+	if claims.UserType != "super_admin" {
+		log.Printf("invalid userType, required userType %v given %v", "super_admin", claims.UserType)
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
 
 	query := database.NewDBinstance(sa.db)
 
-	ok, err = query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
+	ok, err = query.VerifyUser(claims.UserEmail, "super_admin", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -118,14 +118,14 @@ func (sa *SuperAdminRepo) CreateBranch(e echo.Context) (int, error) {
 }
 
 func (sa *SuperAdminRepo) DeleteBranch(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "super_admins", sa.db)
+	status, claims, err := utils.VerifyUserToken(e, "super_admin", sa.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(sa.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "super_admin", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -182,14 +182,14 @@ func (sa *SuperAdminRepo) UpdateBranchHead(e echo.Context) (int, error) {
 		return http.StatusUnauthorized, fmt.Errorf("invalid token")
 	}
 
-	if claims.UserType != "super_admins" {
-		log.Printf("invalid userType, required userType %v given %v", "super_admins", claims.UserType)
+	if claims.UserType != "super_admin" {
+		log.Printf("invalid userType, required userType %v given %v", "super_admin", claims.UserType)
 		return http.StatusUnauthorized, fmt.Errorf("invalid credentials")
 	}
 
 	query := database.NewDBinstance(sa.db)
 
-	ok, err = query.VerifyUser(claims.UserEmail, "super_admins", claims.UserID)
+	ok, err = query.VerifyUser(claims.UserEmail, "super_admin", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

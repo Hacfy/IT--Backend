@@ -24,14 +24,14 @@ func NewOrgRepo(db *sql.DB) *OrgRepo {
 }
 
 func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
+	status, claims, err := utils.VerifyUserToken(e, "organization", or.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(or.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "organization", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -100,14 +100,14 @@ func (or *OrgRepo) CreateSuperAdmin(e echo.Context) (int, error) {
 }
 
 func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
+	status, claims, err := utils.VerifyUserToken(e, "organization", or.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(or.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "organization", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -138,14 +138,14 @@ func (or *OrgRepo) DeleteSuperAdmin(e echo.Context) (int, error) {
 }
 
 func (or *OrgRepo) GetAllSuperAdmins(e echo.Context) (int, []models.AllSuperAdminsDetailsModel, error) {
-	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
+	status, claims, err := utils.VerifyUserToken(e, "organization", or.db)
 	if err != nil {
 		return status, []models.AllSuperAdminsDetailsModel{}, err
 	}
 
 	query := database.NewDBinstance(or.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "organization", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("database error")
@@ -167,7 +167,7 @@ func (or *OrgRepo) GetAllSuperAdmins(e echo.Context) (int, []models.AllSuperAdmi
 		return http.StatusBadRequest, []models.AllSuperAdminsDetailsModel{}, fmt.Errorf("failed to validate request")
 	}
 
-	superAdmins, err := query.GetAllSuperAdmins(getAllSuperAdmins.OrganisationID)
+	superAdmins, err := query.GetAllSuperAdmins(getAllSuperAdmins.OrganizationID)
 	if err != nil {
 		log.Printf("error while fetching superAdmins: %v", err)
 		return http.StatusInternalServerError, []models.AllSuperAdminsDetailsModel{}, err
@@ -178,14 +178,14 @@ func (or *OrgRepo) GetAllSuperAdmins(e echo.Context) (int, []models.AllSuperAdmi
 }
 
 func (or *OrgRepo) ReassignSuperAdmin(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "organisations", or.db)
+	status, claims, err := utils.VerifyUserToken(e, "organization", or.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(or.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "organisations", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "organization", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

@@ -24,13 +24,13 @@ func NewDepartmentRepo(db *sql.DB) *DepartmentRepo {
 }
 
 func (dr *DepartmentRepo) CreateWorkspace(e echo.Context) (int, int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return status, -1, err
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
@@ -61,14 +61,14 @@ func (dr *DepartmentRepo) CreateWorkspace(e echo.Context) (int, int, error) {
 }
 
 func (dr *DepartmentRepo) DeleteWorkspace(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -101,13 +101,13 @@ func (dr *DepartmentRepo) DeleteWorkspace(e echo.Context) (int, error) {
 }
 
 func (dr *DepartmentRepo) RaiseIssue(e echo.Context) (int, int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return status, -1, err
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, -1, fmt.Errorf("database error")
@@ -138,13 +138,13 @@ func (dr *DepartmentRepo) RaiseIssue(e echo.Context) (int, int, error) {
 }
 
 func (dr *DepartmentRepo) RequestNewUnits(e echo.Context) (int, map[int]int, error) {
-	Status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	Status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return Status, map[int]int{}, err
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, map[int]int{}, fmt.Errorf("database error")
@@ -199,13 +199,13 @@ func (dr *DepartmentRepo) RequestNewUnits(e echo.Context) (int, map[int]int, err
 }
 
 func (dr *DepartmentRepo) GetAllDepartmentRequests(e echo.Context) (int, []models.AllRequestsModel, error) {
-	Status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	Status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return Status, []models.AllRequestsModel{}, fmt.Errorf("invalid use token")
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, []models.AllRequestsModel{}, fmt.Errorf("database error")
@@ -237,13 +237,13 @@ func (dr *DepartmentRepo) GetAllDepartmentRequests(e echo.Context) (int, []model
 }
 
 func (dr *DepartmentRepo) GetDepartmentRequestDetails(e echo.Context) (int, models.RequestDetailsModel, error) {
-	Status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	Status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return Status, models.RequestDetailsModel{}, fmt.Errorf("invalid use token")
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, models.RequestDetailsModel{}, fmt.Errorf("database error")
@@ -275,13 +275,13 @@ func (dr *DepartmentRepo) GetDepartmentRequestDetails(e echo.Context) (int, mode
 }
 
 func (dr *DepartmentRepo) DeleteIssue(e echo.Context) (int, error) {
-	Status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	Status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return Status, err
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -331,13 +331,13 @@ func (dr *DepartmentRepo) DeleteIssue(e echo.Context) (int, error) {
 }
 
 func (dr *DepartmentRepo) DeleteRequest(e echo.Context) (int, error) {
-	Status, claims, err := utils.VerifyUserToken(e, "department_heads", dr.db)
+	Status, claims, err := utils.VerifyUserToken(e, "department_head", dr.db)
 	if err != nil {
 		return Status, err
 	}
 	query := database.NewDBinstance(dr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "department_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "department_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

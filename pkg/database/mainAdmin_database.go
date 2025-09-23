@@ -30,11 +30,11 @@ func (q *Query) VerifyMainAdmin(main_admin_email string, main_admin_id int) (boo
 	return true, nil
 }
 
-func (q *Query) CreateOrganisation(organisation models.OrganisationModel) (int, error) {
+func (q *Query) Createorganization(organization models.OrganizationModel) (int, error) {
 	var orgID int
 
 	query1 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query2 := "INSERT INTO organisations(main_admin_id, name, email, phone_number, password) VALUES($1, $2, $3, $4, $5) RETURNING id"
+	query2 := "INSERT INTO organization(main_admin_id, name, email, phone_number, password) VALUES($1, $2, $3, $4, $5) RETURNING id"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -51,11 +51,11 @@ func (q *Query) CreateOrganisation(organisation models.OrganisationModel) (int, 
 		}
 	}()
 
-	if _, err = tx.Exec(query1, organisation.OrganisationEmail, "organisations"); err != nil {
+	if _, err = tx.Exec(query1, organization.OrganizationEmail, "organization"); err != nil {
 		return -1, err
 	}
 
-	if err = tx.QueryRow(query2, organisation.OrganisationMainAdminID, organisation.OrganisationName, organisation.OrganisationEmail, organisation.OrganisationPhoneNumber, organisation.OrganisationPassword).Scan(&orgID); err != nil {
+	if err = tx.QueryRow(query2, organization.OrganizationMainAdminID, organization.OrganizationName, organization.OrganizationEmail, organization.OrganizationPhoneNumber, organization.OrganizationPassword).Scan(&orgID); err != nil {
 		return -1, err
 	}
 
@@ -80,7 +80,7 @@ func (q *Query) GetMainAdminCredentials(main_admin_email string) (models.MainAdm
 }
 
 func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by int) (int, error) {
-	query0 := "SELECT EXISTS(SELECT 1 FROM organisations "
+	query0 := "SELECT EXISTS(SELECT 1 FROM organization "
 	query1 := "DELETE FROM main_admin WHERE main_admin_email = $1"
 	query2 := "INSERT INTO deleted_main_admins(main_admin_id, email, deleted_by) VALUES($1, $2, $3)"
 
@@ -109,7 +109,7 @@ func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by
 	}
 
 	if exists {
-		return http.StatusConflict, fmt.Errorf("main_admin has organisations associated with them")
+		return http.StatusConflict, fmt.Errorf("main_admin has organization associated with them")
 	}
 
 	if _, err = tx.Exec(query1, mainAdminEmail); err != nil {
@@ -127,10 +127,10 @@ func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by
 
 }
 
-func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, deleted_by int) (int, error) {
+func (q *Query) Deleteorganization(organizationEmail string, organization_id, deleted_by int) (int, error) {
 	query1 := "SELECT EXISTS(SELECT 1 FROM super_admins WHERE org_id = $1)"
-	query2 := "INSERT INTO deleted_organisations(org_id, email, main_admin_id) VALUES($1, $2, $3)"
-	query3 := "DELETE FROM organisations WHERE email = $1"
+	query2 := "INSERT INTO deleted_organization(org_id, email, main_admin_id) VALUES($1, $2, $3)"
+	query3 := "DELETE FROM organization WHERE email = $1"
 	query4 := "DELETE FROM users WHERE user_email = $1 RETRUNING user_email, user_level, ever_logged_in, latest_token, created_at"
 	query5 := "INSERT INTO deleted_users(user_email, user_level, ever_logged_in, latest_token, created_at, deleted_by)"
 
@@ -156,7 +156,7 @@ func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, de
 		}
 	}()
 
-	if err = tx.QueryRow(query1, organisationEmail).Scan(&super_admin_exists); err != nil {
+	if err = tx.QueryRow(query1, organizationEmail).Scan(&super_admin_exists); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -166,28 +166,28 @@ func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, de
 	if super_admin_exists {
 		return http.StatusConflict, fmt.Errorf("super_admin has branches associated with it")
 	}
-	if err = tx.QueryRow(query2, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+	if err = tx.QueryRow(query2, organization_id, organizationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if _, err = tx.Exec(query3, organisationEmail); err != nil {
+	if _, err = tx.Exec(query3, organizationEmail); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if err = tx.QueryRow(query4, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+	if err = tx.QueryRow(query4, organization_id, organizationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
 		return http.StatusInternalServerError, fmt.Errorf("database error")
 	}
 
-	if err = tx.QueryRow(query5, organisation_id, organisationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
+	if err = tx.QueryRow(query5, organization_id, organizationEmail, deleted_by).Scan(&org_email, &org_level, &ever_logged_in, &latest_token, &created_at); err != nil {
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, fmt.Errorf("no matching data found")
 		}
@@ -197,21 +197,21 @@ func (q *Query) DeleteOrganisation(organisationEmail string, organisation_id, de
 	return http.StatusNoContent, nil
 }
 
-func (q *Query) GetAllOrganisations(mainAdminID int) ([]models.GetAllOrganisationsModel, error) {
-	var orgs []models.GetAllOrganisationsModel
-	query := "SELECT id, name, email, phone_number FROM organisations WHERE main_admin_id = $1"
+func (q *Query) GetAllorganization(mainAdminID int) ([]models.GetAllOrganizationModel, error) {
+	var orgs []models.GetAllOrganizationModel
+	query := "SELECT id, name, email, phone_number FROM organization WHERE main_admin_id = $1"
 
 	rows, err := q.db.Query(query, mainAdminID)
 	if err != nil {
-		return []models.GetAllOrganisationsModel{}, err
+		return []models.GetAllOrganizationModel{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var org models.GetAllOrganisationsModel
-		err = rows.Scan(&org.OrganisationID, &org.OrganisationName, &org.OrganisationEmail, &org.OrganisationPhoneNumber)
+		var org models.GetAllOrganizationModel
+		err = rows.Scan(&org.OrganizationID, &org.OrganizationName, &org.OrganizationEmail, &org.OrganizationPhoneNumber)
 		if err != nil {
-			return []models.GetAllOrganisationsModel{}, err
+			return []models.GetAllOrganizationModel{}, err
 		}
 		orgs = append(orgs, org)
 	}
@@ -222,7 +222,7 @@ func (q *Query) GetAllOrganisations(mainAdminID int) ([]models.GetAllOrganisatio
 func (q *Query) GetAllMainAdmins() ([]models.AllMainAdminModel, error) {
 	var main_admins []models.AllMainAdminModel
 
-	query := "SELECT main_admin_id, main_admin_email, COUNT(organisation_id) AS no_of_orgs FROM main_admin JOIN organisations ON main_admin_id = main_admin_id"
+	query := "SELECT main_admin_id, main_admin_email, COUNT(organization_id) AS no_of_orgs FROM main_admin JOIN organization ON main_admin_id = main_admin_id"
 
 	rows, err := q.db.Query(query)
 	if err != nil {

@@ -97,14 +97,14 @@ func (wr *WarehouseRepo) generateUniquePrefix(name string) (string, error) {
 }
 
 func (wr *WarehouseRepo) CreateComponent(e echo.Context) (int, string, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, "", err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, "", fmt.Errorf("database error")
@@ -152,14 +152,14 @@ func (wr *WarehouseRepo) CreateComponent(e echo.Context) (int, string, error) {
 }
 
 func (wr *WarehouseRepo) DeleteComponent(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -190,14 +190,14 @@ func (wr *WarehouseRepo) DeleteComponent(e echo.Context) (int, error) {
 
 func (wr *WarehouseRepo) AddComponentUnits(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -238,14 +238,14 @@ func (wr *WarehouseRepo) AddComponentUnits(e echo.Context) (int, error) {
 
 func (wr *WarehouseRepo) AssignUnits(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -288,14 +288,14 @@ func (wr *WarehouseRepo) AssignUnits(e echo.Context) (int, error) {
 }
 
 func (wr *WarehouseRepo) GetAllWarehouseIssues(e echo.Context) (int, []models.IssueModel, int, int, int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, []models.IssueModel{}, 0, 0, 0, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, []models.IssueModel{}, 0, 0, 0, fmt.Errorf("database error")
@@ -353,14 +353,14 @@ func (wr *WarehouseRepo) GetAllWarehouseIssues(e echo.Context) (int, []models.Is
 }
 
 func (wr *WarehouseRepo) GetAllWarehouseComponents(e echo.Context) (int, []models.AllWarehouseComponentsModel, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, []models.AllWarehouseComponentsModel{}, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, []models.AllWarehouseComponentsModel{}, fmt.Errorf("database error")
@@ -380,14 +380,14 @@ func (wr *WarehouseRepo) GetAllWarehouseComponents(e echo.Context) (int, []model
 }
 
 func (wr *WarehouseRepo) GetAllWarehouseComponentUnits(e echo.Context) (int, []models.AllComponentUnitsModel, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, []models.AllComponentUnitsModel{}, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, []models.AllComponentUnitsModel{}, fmt.Errorf("database error")
@@ -420,14 +420,14 @@ func (wr *WarehouseRepo) GetAllWarehouseComponentUnits(e echo.Context) (int, []m
 }
 
 func (wr *WarehouseRepo) GetIssueDetails(e echo.Context) (int, models.IssueDetailsModel, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, models.IssueDetailsModel{}, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, models.IssueDetailsModel{}, fmt.Errorf("database error")
@@ -460,14 +460,14 @@ func (wr *WarehouseRepo) GetIssueDetails(e echo.Context) (int, models.IssueDetai
 }
 
 func (wr *WarehouseRepo) GetUnitAssignmentHistory(e echo.Context) (int, models.UnitAssignmentHistoryModel, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, models.UnitAssignmentHistoryModel{}, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, models.UnitAssignmentHistoryModel{}, fmt.Errorf("database error")
@@ -504,14 +504,14 @@ func (wr *WarehouseRepo) GetUnitAssignmentHistory(e echo.Context) (int, models.U
 }
 
 func (wr *WarehouseRepo) UpdateIssueStatus(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -554,14 +554,14 @@ func (wr *WarehouseRepo) UpdateIssueStatus(e echo.Context) (int, error) {
 }
 
 func (wr *WarehouseRepo) UpdateComponentName(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -614,14 +614,14 @@ func (wr *WarehouseRepo) GetAssignedUnits(e echo.Context) (int, []models.Assigne
 	}
 
 	offset := (page - 1) * limit
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, []models.AssignedUnitsModel{}, -1, -1, -1, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, []models.AssignedUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
@@ -660,14 +660,14 @@ func (wr *WarehouseRepo) GetAssignedUnits(e echo.Context) (int, []models.Assigne
 }
 
 func (wr *WarehouseRepo) UpdateMaintenanceCost(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -713,14 +713,14 @@ func (wr *WarehouseRepo) UpdateMaintenanceCost(e echo.Context) (int, error) {
 }
 
 func (wr *WarehouseRepo) UpdateUnitStatus(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -765,14 +765,14 @@ func (wr *WarehouseRepo) UpdateUnitStatus(e echo.Context) (int, error) {
 }
 
 func (wr *WarehouseRepo) DeleteUnit(e echo.Context) (int, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", wr.db)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", wr.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(wr.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

@@ -23,14 +23,14 @@ func NewExcelRepo(db *sql.DB) *ExcelRepo {
 }
 
 func (r *ExcelRepo) DownloadComponentMaintainanceReport(e echo.Context) (int, *excelize.File, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", r.DB)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", r.DB)
 	if err != nil {
 		return status, nil, err
 	}
 
 	query := database.NewDBinstance(r.DB)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, nil, fmt.Errorf("database error")
@@ -231,14 +231,14 @@ func (r *ExcelRepo) DownloadComponentMaintainanceReport(e echo.Context) (int, *e
 }
 
 func (r *ExcelRepo) DownloadComponentPrefixReport(e echo.Context) (int, *excelize.File, error) {
-	status, claims, err := utils.VerifyUserToken(e, "warehouses", r.DB)
+	status, claims, err := utils.VerifyUserToken(e, "warehouse", r.DB)
 	if err != nil {
 		return status, nil, err
 	}
 
 	query := database.NewDBinstance(r.DB)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "warehouses", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "warehouse", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, nil, fmt.Errorf("database error")

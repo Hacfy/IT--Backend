@@ -24,14 +24,14 @@ func NewBranchRepo(db *sql.DB) *BranchRepo {
 
 func (br *BranchRepo) CreateDepartment(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	status, claims, err := utils.VerifyUserToken(e, "branch_head", br.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(br.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -90,14 +90,14 @@ func (br *BranchRepo) CreateDepartment(e echo.Context) (int, error) {
 
 func (br *BranchRepo) CreateWarehouse(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	status, claims, err := utils.VerifyUserToken(e, "branch_head", br.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(br.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -157,14 +157,14 @@ func (br *BranchRepo) CreateWarehouse(e echo.Context) (int, error) {
 
 func (br *BranchRepo) UpdateDepartmentHead(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	status, claims, err := utils.VerifyUserToken(e, "branch_head", br.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(br.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -223,14 +223,14 @@ func (br *BranchRepo) UpdateDepartmentHead(e echo.Context) (int, error) {
 
 func (br *BranchRepo) UpdateWarehouseHead(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	status, claims, err := utils.VerifyUserToken(e, "branch_head", br.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(br.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -289,14 +289,14 @@ func (br *BranchRepo) UpdateWarehouseHead(e echo.Context) (int, error) {
 
 func (br *BranchRepo) DeleteDepartment(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	status, claims, err := utils.VerifyUserToken(e, "branch_head", br.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(br.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -351,14 +351,14 @@ func (br *BranchRepo) DeleteDepartment(e echo.Context) (int, error) {
 
 func (br *BranchRepo) DeleteWarehouse(e echo.Context) (int, error) {
 
-	status, claims, err := utils.VerifyUserToken(e, "branch_heads", br.db)
+	status, claims, err := utils.VerifyUserToken(e, "branch_head", br.db)
 	if err != nil {
 		return status, err
 	}
 
 	query := database.NewDBinstance(br.db)
 
-	ok, err := query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err := query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")
@@ -379,7 +379,7 @@ func (br *BranchRepo) DeleteWarehouse(e echo.Context) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("failed to validate request")
 	}
 
-	ok, err = query.VerifyUser(claims.UserEmail, "branch_heads", claims.UserID)
+	ok, err = query.VerifyUser(claims.UserEmail, "branch_head", claims.UserID)
 	if err != nil {
 		log.Printf("Error checking user details: %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("database error")

@@ -107,8 +107,8 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 			log.Printf("Invalid user details")
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
-	case "organisation_admin":
-		ok, err := query.CheckIfBranchUnderOrganisationAdmin(Request.BranchID, userID)
+	case "organization_admin":
+		ok, err := query.CheckIfBranchUnderorganizationAdmin(Request.BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -224,8 +224,8 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 			log.Printf("Invalid user details")
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
-	case "organisation_admin":
-		ok, err := query.CheckIfDepartmentUnderOrganisationAdmin(Request.DepartmentID, userID)
+	case "organization_admin":
+		ok, err := query.CheckIfDepartmentUnderorganizationAdmin(Request.DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -338,8 +338,8 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 			log.Printf("Invalid user details")
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
-	case "organisation_admin":
-		ok, err := query.CheckIfDepartmentUnderOrganisationAdmin(Request.DepartmentID, userID)
+	case "organization_admin":
+		ok, err := query.CheckIfDepartmentUnderorganizationAdmin(Request.DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -538,8 +538,8 @@ func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesM
 			log.Printf("Invalid user details")
 			return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
 		}
-	case "organisation_admin":
-		ok, err := query.CheckIfBranchUnderOrganisationAdmin(Request.BranchID, userID)
+	case "organization_admin":
+		ok, err := query.CheckIfBranchUnderorganizationAdmin(Request.BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
