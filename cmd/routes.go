@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/Hacfy/IT_INVENTORY/internals/handlers"
+	"github.com/Hacfy/IT_INVENTORY/internals/middleware"
 	// "github.com/Hacfy/IT_INVENTORY/internals/middleware"
 	"github.com/Hacfy/IT_INVENTORY/repository"
 	"github.com/labstack/echo/v4"
@@ -101,13 +102,15 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	detailsHandler := handlers.NewDetailsHandler(repository.NewDetailsRepo(db))
 
-	e.GET("/details/get/all/departments", detailsHandler.GetAllDepartmentsHandler)                                  //
-	e.GET("/details/get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)                         //
-	e.GET("/details/get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)                 //
-	e.GET("/details/get/all/branches", detailsHandler.GetAllBranchesHandler)                                        //
-	e.GET("/details/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)                                    //
-	e.GET("/details/get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler) //
-	e.GET("/details/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler) //
+	detailsGroup := e.Group("/details", middleware.AuthMiddleware, middleware.RoleMiddleware("organization", "super_admin", "branch_head", "department_head", "warehouses"))
+
+	detailsGroup.GET("get/all/departments", detailsHandler.GetAllDepartmentsHandler)                                  //
+	detailsGroup.GET("get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)                         //
+	detailsGroup.GET("get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)                 //
+	detailsGroup.GET("get/all/branches", detailsHandler.GetAllBranchesHandler)                                        //
+	detailsGroup.GET("get/all/warehouses", detailsHandler.GetAllWarehousesHandler)                                    //
+	detailsGroup.GET("get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler) //
+	detailsGroup.GET("get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler) //
 
 	excelHandler := handlers.NewExcelHandler(repository.NewExcelRepo(db))
 
