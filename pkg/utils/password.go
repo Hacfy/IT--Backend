@@ -30,19 +30,17 @@ func StrongPasswordValidator(password string) bool {
 	return hasUpper && hasLower && hasDigit && hasSpecial
 
 }
-
 func GeneratePassword() (string, error) {
-
-	const char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[!{@#$%^&*(),.?\":}<>]"
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(),.?\":{}<>"
 
 	password := make([]byte, 10)
 
 	for i := 0; i < 10; i++ {
-		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(char))))
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
 		if err != nil {
 			return "", err
 		}
-		password[i] = char[n.Int64()]
+		password[i] = chars[n.Int64()]
 	}
 
 	return string(password), nil

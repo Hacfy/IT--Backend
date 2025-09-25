@@ -14,7 +14,7 @@ func (q *Query) CreateBranch(branch models.CreateBranchModel, superAdminID int, 
 	query1 := "SELECT org_id FROM super_admin WHERE id = $1"
 	query2 := "INSERT INTO branches(org_id, super_admin_id, branch_name, branch_location) VALUES($1, $2, $3, $4) RETURNING branch_id"
 	query3 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query4 := "INSERT INTO branch(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
+	query4 := "INSERT INTO branch_head(branch_id, name, email, password) VALUES($1, $2, $3, $4)"
 
 	tx, err := q.db.Begin()
 	if err != nil {
