@@ -152,18 +152,16 @@ func GenerateComponentToken(id int, name, prefix string) (string, error) {
 }
 
 func ParseToken(tokenStr string) (*models.UserTokenModel, error) {
-
 	jwtSecret := os.Getenv("JWT_SECRET")
 
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+	claims := &models.UserTokenModel{}
+
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil || !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token: %v", err)
 	}
-	Claims, ok := token.Claims.(*models.UserTokenModel)
-	if !ok {
-		return nil, fmt.Errorf("invalid claims")
-	}
-	return Claims, nil
+
+	return claims, nil
 }

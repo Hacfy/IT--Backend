@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"log"
+
 	"github.com/Hacfy/IT_INVENTORY/pkg/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -11,6 +13,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		claims, err := utils.ParseToken(tokenStr)
 		if err != nil {
+			log.Println(err)
 			return c.JSON(401, echo.Map{"error": "Unauthorized"})
 		}
 

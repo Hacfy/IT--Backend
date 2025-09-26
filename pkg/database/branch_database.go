@@ -10,10 +10,10 @@ import (
 )
 
 func (q *Query) CreateDepartment(department models.CreateDepartmentModel, branch_head_id int, password string) error {
-	query0 := "SELECT branch_id FROM branch_heads WHERE id = $1"
+	query0 := "SELECT branch_id FROM branch_head WHERE id = $1"
 	query1 := "INSERT INTO departments(branch_id, department_name) VALUES($1, $2) RETURNING department_id"
 	query2 := "INSERT INTO users(user_email, user_level) VALUES($1, $2)"
-	query3 := "INSERT INTO department_heads(department_id, name, email, password) VALUES($1, $2, $3, $4)"
+	query3 := "INSERT INTO department_head(department_id, name, email, password) VALUES($1, $2, $3, $4)"
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -39,7 +39,7 @@ func (q *Query) CreateDepartment(department models.CreateDepartmentModel, branch
 		return err
 	}
 
-	if _, err = tx.Exec(query2, department.DepartmentHeadEmail, "department_heads"); err != nil {
+	if _, err = tx.Exec(query2, department.DepartmentHeadEmail, "department_head"); err != nil {
 		return err
 	}
 
