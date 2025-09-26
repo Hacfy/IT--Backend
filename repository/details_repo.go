@@ -409,19 +409,7 @@ func (dr *DetailsRepo) GetAllBranchesUnderSuperAdmin(e echo.Context) ([]models.A
 		return []models.AllBranchesModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 	}
 
-	var Request models.GetAllBranchesModel
-
-	if err := e.Bind(&Request); err != nil {
-		log.Printf("failed to decode request: %v", err)
-		return []models.AllBranchesModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid request format")
-	}
-
-	if err := validate.Struct(Request); err != nil {
-		log.Printf("failed to validate request: %v", err)
-		return []models.AllBranchesModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
-	}
-
-	status, Branches, Total_Branches, err := query.GetAllBranches(Request.SuperAdminID, Sort)
+	status, Branches, Total_Branches, err := query.GetAllBranches(userID, Sort)
 	if err != nil {
 		return []models.AllBranchesModel{}, status, -1, Sort.Page, Sort.Limit, err
 	}
