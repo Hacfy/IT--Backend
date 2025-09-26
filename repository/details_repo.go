@@ -76,21 +76,15 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 	}
 
-	var Request models.GetAllDepartmentsModel
-
-	if err := e.Bind(&Request); err != nil {
-		log.Printf("failed to decode request: %v", err)
+	BranchID, err := strconv.Atoi(e.QueryParam("branch_id"))
+	if err != nil {
+		log.Printf("error while parsing branch id: %v", err)
 		return []models.AllDepartmentsModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid request format")
-	}
-
-	if err := validate.Struct(Request); err != nil {
-		log.Printf("failed to validate request: %v", err)
-		return []models.AllDepartmentsModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
 	}
 
 	switch role {
 	case "branch_head":
-		ok, err := query.CheckBranchHead(userID, Request.BranchID)
+		ok, err := query.CheckBranchHead(userID, BranchID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -99,7 +93,7 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "super_admin":
-		ok, err := query.CheckIfBranchUnderSuperAdmin(Request.BranchID, userID)
+		ok, err := query.CheckIfBranchUnderSuperAdmin(BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -108,7 +102,7 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "organization_admin":
-		ok, err := query.CheckIfBranchUnderorganizationAdmin(Request.BranchID, userID)
+		ok, err := query.CheckIfBranchUnderorganizationAdmin(BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -121,7 +115,7 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 		return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user role")
 	}
 
-	status, Departments, Total_Departments, err := query.GetAllDepartments(Request.BranchID, Sort)
+	status, Departments, Total_Departments, err := query.GetAllDepartments(BranchID, Sort)
 	if err != nil {
 		return []models.AllDepartmentsModel{}, status, Total_Departments, Sort.Page, Sort.Limit, err
 	}
@@ -184,21 +178,15 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 		return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 	}
 
-	var Request models.GetDepartmentIssuesModel
-
-	if err := e.Bind(&Request); err != nil {
-		log.Printf("failed to decode request: %v", err)
+	DepartmentID, err := strconv.Atoi(e.QueryParam("department_id"))
+	if err != nil {
+		log.Printf("error while parsing department id: %v", err)
 		return http.StatusBadRequest, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid request format")
-	}
-
-	if err := validate.Struct(Request); err != nil {
-		log.Printf("failed to validate request: %v", err)
-		return http.StatusBadRequest, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
 	}
 
 	switch role {
 	case "department_head":
-		ok, err := query.CheckDepartmentHead(userID, Request.DepartmentID)
+		ok, err := query.CheckDepartmentHead(userID, DepartmentID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -207,7 +195,7 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "branch_head":
-		ok, err := query.CheckIfDepartmentUnderBranchHead(Request.DepartmentID, userID)
+		ok, err := query.CheckIfDepartmentUnderBranchHead(DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -216,7 +204,7 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "super_admin":
-		ok, err := query.CheckIfDepartmentUnderSuperAdmin(Request.DepartmentID, userID)
+		ok, err := query.CheckIfDepartmentUnderSuperAdmin(DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -225,7 +213,7 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "organization_admin":
-		ok, err := query.CheckIfDepartmentUnderorganizationAdmin(Request.DepartmentID, userID)
+		ok, err := query.CheckIfDepartmentUnderorganizationAdmin(DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -238,7 +226,7 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 		return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user role")
 	}
 
-	status, Issues, Total_Issues, err := query.GetDepartmentIssues(Request.DepartmentID, Sort)
+	status, Issues, Total_Issues, err := query.GetDepartmentIssues(DepartmentID, Sort)
 	if err != nil {
 		return status, []models.DepartmentIssuesModel{}, Total_Issues, Sort.Page, Sort.Limit, err
 	}
@@ -298,21 +286,15 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 	}
 
-	var Request models.GetDepartmentWorkspacesModel
-
-	if err := e.Bind(&Request); err != nil {
-		log.Printf("failed to decode request: %v", err)
+	DepartmentID, err := strconv.Atoi(e.QueryParam("department_id"))
+	if err != nil {
+		log.Printf("error while parsing department id: %v", err)
 		return nil, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid request format")
-	}
-
-	if err := validate.Struct(Request); err != nil {
-		log.Printf("failed to validate request: %v", err)
-		return nil, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("failed to validate request")
 	}
 
 	switch role {
 	case "department_head":
-		ok, err := query.CheckDepartmentHead(userID, Request.DepartmentID)
+		ok, err := query.CheckDepartmentHead(userID, DepartmentID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -321,7 +303,7 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "branch_head":
-		ok, err := query.CheckIfDepartmentUnderBranchHead(Request.DepartmentID, userID)
+		ok, err := query.CheckIfDepartmentUnderBranchHead(DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -330,7 +312,7 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "super_admin":
-		ok, err := query.CheckIfDepartmentUnderSuperAdmin(Request.DepartmentID, userID)
+		ok, err := query.CheckIfDepartmentUnderSuperAdmin(DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -339,7 +321,7 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
 	case "organization_admin":
-		ok, err := query.CheckIfDepartmentUnderorganizationAdmin(Request.DepartmentID, userID)
+		ok, err := query.CheckIfDepartmentUnderorganizationAdmin(DepartmentID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
@@ -352,7 +334,7 @@ func (dr *DetailsRepo) GetDepartmentWorkspaces(e echo.Context) ([]models.Departm
 		return nil, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user role")
 	}
 
-	status, Workspaces, Total_Workspaces, err := query.GetAllWorkspaces(Request.DepartmentID, Sort)
+	status, Workspaces, Total_Workspaces, err := query.GetAllWorkspaces(DepartmentID, Sort)
 	if err != nil {
 		return nil, status, -1, Sort.Page, Sort.Limit, err
 	}
@@ -495,21 +477,15 @@ func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesM
 		return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
 	}
 
-	var Request models.GetAllWarehousesModel
-
-	if err := e.Bind(&Request); err != nil {
-		log.Printf("failed to decode request: %v", err)
+	BranchID, err := strconv.Atoi(e.QueryParam("branch_id"))
+	if err != nil {
+		log.Printf("error while parsing branch id: %v", err)
 		return nil, http.StatusBadRequest, fmt.Errorf("invalid request format")
-	}
-
-	if err := validate.Struct(Request); err != nil {
-		log.Printf("failed to validate request: %v", err)
-		return nil, http.StatusBadRequest, fmt.Errorf("failed to validate request")
 	}
 
 	switch role {
 	case "branch_head":
-		ok, err := query.CheckBranchHead(userID, Request.BranchID)
+		ok, err := query.CheckBranchHead(userID, BranchID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
@@ -518,7 +494,7 @@ func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesM
 			return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
 		}
 	case "super_admin":
-		ok, err := query.CheckIfBranchUnderSuperAdmin(Request.BranchID, userID)
+		ok, err := query.CheckIfBranchUnderSuperAdmin(BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
@@ -527,7 +503,7 @@ func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesM
 			return nil, http.StatusUnauthorized, fmt.Errorf("invalid user details")
 		}
 	case "organization_admin":
-		ok, err := query.CheckIfBranchUnderorganizationAdmin(Request.BranchID, userID)
+		ok, err := query.CheckIfBranchUnderorganizationAdmin(BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return nil, http.StatusUnauthorized, fmt.Errorf("database error")
@@ -540,7 +516,7 @@ func (dr *DetailsRepo) GetAllWarehouses(e echo.Context) ([]models.AllWarehousesM
 		return nil, http.StatusUnauthorized, fmt.Errorf("invalid user role")
 	}
 
-	status, warehouses, err := query.GetAllWarehouses(Request.BranchID)
+	status, warehouses, err := query.GetAllWarehouses(BranchID)
 	if err != nil {
 		return nil, status, err
 	}
@@ -579,17 +555,16 @@ func (dr *DetailsRepo) GetAllOutOfWarentyUnitsInDepartment(e echo.Context) (int,
 	}
 	Sort.Offset = (Sort.Page - 1) * Sort.Limit
 
-	var getAllOutOfWarehouseUnits models.GetAllOutOfWarentyUnitsModel
-
-	err := e.Bind(&getAllOutOfWarehouseUnits)
+	ComponentID, err := strconv.Atoi(e.QueryParam("component_id"))
 	if err != nil {
-		log.Printf("failed to decode request: %v", err)
-		return http.StatusBadRequest, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid request format")
+		log.Printf("error while parsing component id: %v", err)
+		return http.StatusBadRequest, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
 	}
 
-	if getAllOutOfWarehouseUnits.ComponentID <= 0 {
-		log.Printf("invalid component id")
-		return http.StatusBadRequest, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
+	DepartmentID, err := strconv.Atoi(e.QueryParam("department_id"))
+	if err != nil {
+		log.Printf("error while parsing department id: %v", err)
+		return http.StatusBadRequest, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid department id")
 	}
 
 	query := database.NewDBinstance(dr.db)
@@ -605,7 +580,7 @@ func (dr *DetailsRepo) GetAllOutOfWarentyUnitsInDepartment(e echo.Context) (int,
 
 	switch role {
 	case "department_head":
-		ok, err := query.CheckDepartmentHead(userID, getAllOutOfWarehouseUnits.DepartmentID)
+		ok, err := query.CheckDepartmentHead(userID, DepartmentID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
@@ -614,7 +589,7 @@ func (dr *DetailsRepo) GetAllOutOfWarentyUnitsInDepartment(e echo.Context) (int,
 			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("invalid user details")
 		}
 	case "warehouses":
-		ok, err := query.CheckWarehouseHead(userID, getAllOutOfWarehouseUnits.ComponentID)
+		ok, err := query.CheckWarehouseHead(userID, ComponentID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)
 			return http.StatusUnauthorized, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
@@ -624,13 +599,13 @@ func (dr *DetailsRepo) GetAllOutOfWarentyUnitsInDepartment(e echo.Context) (int,
 		}
 	}
 
-	_, prefix, err := query.GetComponentNameAndPrefix(getAllOutOfWarehouseUnits.ComponentID)
+	_, prefix, err := query.GetComponentNameAndPrefix(ComponentID)
 	if err != nil {
 		log.Printf("error while fetching assigned units: %v", err)
 		return http.StatusInternalServerError, []models.AllOutOfWarentyUnitsModel{}, -1, -1, -1, fmt.Errorf("database error")
 	}
 
-	status, warehouses, total, err := query.GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits, prefix, Sort.Limit, Sort.Offset)
+	status, warehouses, total, err := query.GetAllOutOfWarentyUnitsInDepartment(DepartmentID, ComponentID, prefix, Sort.Limit, Sort.Offset)
 	if err != nil {
 		return status, []models.AllOutOfWarentyUnitsModel{}, total, -1, -1, err
 	}
@@ -666,23 +641,30 @@ func (dr *DetailsRepo) GetAllOutOfWarentyUnitsInWarehouse(e echo.Context) (int, 
 	}
 	Sort.Offset = (Sort.Page - 1) * Sort.Limit
 
-	var getAllOutOfWarehouseUnits models.GetAllOutOfWarentyUnitsModel
-
-	err = e.Bind(&getAllOutOfWarehouseUnits)
+	ComponentID, err := strconv.Atoi(e.QueryParam("component_id"))
 	if err != nil {
-		log.Printf("failed to decode request: %v", err)
-		return http.StatusBadRequest, []models.AllOutOfWarentyWarehouseModel{}, -1, -1, -1, fmt.Errorf("invalid request format")
+		log.Printf("error while parsing component id: %v", err)
+		return http.StatusBadRequest, []models.AllOutOfWarentyWarehouseModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
 	}
 
-	if getAllOutOfWarehouseUnits.ComponentID <= 0 {
+	if ComponentID <= 0 {
 		log.Printf("invalid component id")
 		return http.StatusBadRequest, []models.AllOutOfWarentyWarehouseModel{}, -1, -1, -1, fmt.Errorf("invalid component id")
 	}
 
-	_, prefix, err := query.GetComponentNameAndPrefix(getAllOutOfWarehouseUnits.ComponentID)
+	_, prefix, err := query.GetComponentNameAndPrefix(ComponentID)
 	if err != nil {
 		log.Printf("error while fetching assigned units: %v", err)
 		return http.StatusInternalServerError, []models.AllOutOfWarentyWarehouseModel{}, -1, -1, -1, fmt.Errorf("database error")
+	}
+
+	exists, err := query.CheckIfComponentBelongsToWarehouse(ComponentID, claims.UserID)
+	if err != nil {
+		log.Printf("error while fetching assigned units: %v", err)
+		return http.StatusInternalServerError, []models.AllOutOfWarentyWarehouseModel{}, -1, -1, -1, fmt.Errorf("database error")
+	} else if !exists {
+		log.Printf("invalid component id")
+		return http.StatusBadRequest, []models.AllOutOfWarentyWarehouseModel{}, -1, -1, -1, fmt.Errorf("component not found")
 	}
 
 	status, units, total, err := query.GetAllOutOfWarehouseUnitsInWarehouse(claims.UserID, Sort.Limit, Sort.Offset, prefix)

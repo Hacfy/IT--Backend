@@ -583,7 +583,7 @@ func (q *Query) GetAllOutOfWarehouseUnitsInWarehouse(warehouse_id, limit, offset
 
 }
 
-func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits models.GetAllOutOfWarentyUnitsModel, prefix string, limit, offset int) (int, []models.AllOutOfWarentyUnitsModel, int, error) {
+func (q *Query) GetAllOutOfWarentyUnitsInDepartment(DepartmentID, ComponentID int, prefix string, limit, offset int) (int, []models.AllOutOfWarentyUnitsModel, int, error) {
 	query := fmt.Sprintf("SELECT id, warehouse_id, warranty_date FROM %s_units WHERE warenty_date < NOW() AND id IN (SELECT unit_id FROM %s_units_assigned WHERE department_id = $1) LIMIT $2 OFFSET $3", prefix, prefix)
 	query1 := "SELECT COUNT(*) FROM %s_units WHERE warenty_date < NOW() AND id IN (SELECT unit_id FROM %s_units_assigned WHERE department_id = $1)"
 
@@ -604,7 +604,7 @@ func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits mo
 
 	var rows *sql.Rows
 
-	rows, err = tx.Query(query, getAllOutOfWarehouseUnits.DepartmentID, limit, offset)
+	rows, err = tx.Query(query, DepartmentID, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
@@ -633,7 +633,7 @@ func (q *Query) GetAllOutOfWarentyUnitsInDepartment(getAllOutOfWarehouseUnits mo
 
 	countQuery := fmt.Sprintf(query1, prefix, prefix)
 	var total int
-	if err = tx.QueryRow(countQuery, getAllOutOfWarehouseUnits.DepartmentID).Scan(&total); err != nil {
+	if err = tx.QueryRow(countQuery, DepartmentID).Scan(&total); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("no units found for component id %v", prefix)
 			return http.StatusNotFound, []models.AllOutOfWarentyUnitsModel{}, 0, fmt.Errorf("no units found")
