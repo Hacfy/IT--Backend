@@ -316,7 +316,7 @@ func (q *Query) GetAllBranches(super_admin_id int, sort models.SortModel) (int, 
 				bh.name AS branch_head_name
 			FROM
 				branches b
-			LEFT JOIN branch_heads bh ON b.branch_id = bh.branch_id
+			LEFT JOIN branch_head bh ON b.branch_id = bh.branch_id
 			%s
 			ORDER BY b.%s %s
 			LIMIT $1 OFFSET $2;

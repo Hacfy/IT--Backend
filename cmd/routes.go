@@ -104,13 +104,13 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	detailsGroup := e.Group("/details", middleware.AuthMiddleware, middleware.RoleMiddleware("organization", "super_admin", "branch_head", "department_head", "warehouses"))
 
-	detailsGroup.GET("get/all/departments", detailsHandler.GetAllDepartmentsHandler)                                  //
-	detailsGroup.GET("get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)                         //
-	detailsGroup.GET("get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)                 //
-	detailsGroup.GET("get/all/branches", detailsHandler.GetAllBranchesHandler)                                        //
-	detailsGroup.GET("get/all/warehouses", detailsHandler.GetAllWarehousesHandler)                                    //
-	detailsGroup.GET("get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler) //
-	detailsGroup.GET("get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler) //
+	detailsGroup.GET("/get/all/departments", detailsHandler.GetAllDepartmentsHandler)                                  //
+	detailsGroup.GET("/get/all/departments/issues", detailsHandler.GetDepartmentIssuesHandler)                         //
+	detailsGroup.GET("/get/all/departments/workspaces", detailsHandler.GetDepartmentWorkspacesHandler)                 //
+	detailsGroup.GET("/get/all/branches", detailsHandler.GetAllBranchesHandler)                                        //
+	detailsGroup.GET("/get/all/warehouses", detailsHandler.GetAllWarehousesHandler)                                    //
+	detailsGroup.GET("/get/all/department/outOfWarentyUnits", detailsHandler.GetAllDepartmentOutOfWarentyUnitsHandler) //
+	detailsGroup.GET("/get/all/warehouse/outOfWarentyUnits", detailsHandler.GetAllOutOfWarentyUnitsInWarehouseHandler) //
 
 	excelHandler := handlers.NewExcelHandler(repository.NewExcelRepo(db))
 
