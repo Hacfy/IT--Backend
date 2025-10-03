@@ -98,7 +98,7 @@ func SendForgotPasswordEmail(email, otp string) error {
 
 	client := gomail.NewDialer(smtpHost, smtpPortInt, hostEmail, appPassword)
 
-	htmlTemplate := templates.GetForgotPasswordTemplate(email)
+	htmlTemplate := templates.GetForgotPasswordTemplate(email, otp)
 
 	message := gomail.NewMessage()
 
