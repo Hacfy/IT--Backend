@@ -82,6 +82,11 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 		return []models.AllDepartmentsModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid request format")
 	}
 
+	if BranchID == 0 {
+		log.Printf("invalid branch id")
+		return []models.AllDepartmentsModel{}, http.StatusBadRequest, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid branch id")
+	}
+
 	switch role {
 	case "branch_head":
 		ok, err := query.CheckBranchHead(userID, BranchID)
@@ -101,7 +106,7 @@ func (dr *DetailsRepo) GetAllDepartmentsRepo(e echo.Context) ([]models.AllDepart
 			log.Printf("Invalid user details")
 			return []models.AllDepartmentsModel{}, http.StatusUnauthorized, -1, Sort.Page, Sort.Limit, fmt.Errorf("invalid user details")
 		}
-	case "organization_admin":
+	case "organization":
 		ok, err := query.CheckIfBranchUnderorganizationAdmin(BranchID, userID)
 		if err != nil {
 			log.Printf("Error checking user details: %v", err)

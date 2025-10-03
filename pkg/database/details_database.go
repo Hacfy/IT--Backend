@@ -402,7 +402,7 @@ func (q *Query) CheckIfWarehouseIDExistsInTheDepartmentsBranch(warehouse_id, use
 }
 
 func (q *Query) CheckBranchHead(user_id, branch_id int) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM branch_heads WHERE id = $1 AND branch_id = $2)"
+	query := "SELECT EXISTS(SELECT 1 FROM branch_head WHERE id = $1 AND branch_id = $2)"
 	var exists bool
 	err := q.db.QueryRow(query, user_id, branch_id).Scan(&exists)
 	if err != nil {
