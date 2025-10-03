@@ -47,7 +47,7 @@ func (q *Query) GetAllDepartments(branch_id int, sort models.SortModel) (int, []
 		COUNT(DISTINCT i.id) AS issues
 	FROM 
 		departments d
-	LEFT JOIN department_heads dh ON d.department_id = dh.department_id
+	LEFT JOIN department_head dh ON d.department_id = dh.department_id
 	LEFT JOIN workspaces w ON d.department_id = w.department_id
 	LEFT JOIN issues i ON d.department_id = i.department_id
 	%s
@@ -144,7 +144,7 @@ func (q *Query) GetDepartmentIssues(department_id int, sort models.SortModel) (i
 		issues i
 	LEFT JOIN workspaces w ON i.workspace_id = w.id
 	LEFT JOIN departments d ON i.department_id = d.department_id
-	LEFT JOIN department_heads dh ON d.department_id = dh.department_id
+	LEFT JOIN department_head dh ON d.department_id = dh.department_id
 	%s
 	ORDER BY i.%s %s
 	LIMIT $1 OFFSET $2;`,
