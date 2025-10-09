@@ -139,10 +139,10 @@ func (q *Query) GetDepartmentIssues(department_id int, sort models.SortModel) (i
 	i.status, 
 	i.unit_id,
 	i.unit_prefix,
-	w.workspace_id
+	w.id
 	FROM 
 		issues i
-	LEFT JOIN workspaces w ON i.workspace_id = w.id
+	LEFT JOIN workspaces w ON i.id = w.id
 	LEFT JOIN departments d ON i.department_id = d.department_id
 	LEFT JOIN department_head dh ON d.department_id = dh.department_id
 	%s
@@ -366,7 +366,7 @@ func (q *Query) GetAllBranches(super_admin_id int, sort models.SortModel) (int, 
 }
 
 func (q *Query) CheckIfDepartmentUnderBranchHead(department_id, user_id int) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id = (SELECT branch_id FROM branch_heads WHERE id = $2)"
+	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id = (SELECT branch_id FROM branch_head WHERE id = $2))"
 	var exists bool
 	err := q.db.QueryRow(query, department_id, user_id).Scan(&exists)
 	if err != nil {
@@ -376,7 +376,7 @@ func (q *Query) CheckIfDepartmentUnderBranchHead(department_id, user_id int) (bo
 }
 
 func (q *Query) CheckIfWarehouseUnderBranchHead(warehouse_id, user_id int) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM warehouses WHERE warehouse_id = $1 AND branch_id = (SELECT branch_id FROM branch_heads WHERE id = $2)"
+	query := "SELECT EXISTS(SELECT 1 FROM warehouses WHERE warehouse_id = $1 AND branch_id = (SELECT branch_id FROM branch_head WHERE id = $2))"
 	var exists bool
 	err := q.db.QueryRow(query, warehouse_id, user_id).Scan(&exists)
 	if err != nil {

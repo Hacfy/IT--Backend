@@ -202,7 +202,7 @@ func (dr *DetailsRepo) GetDepartmentIssues(e echo.Context) (int, []models.Depart
 	case "branch_head":
 		ok, err := query.CheckIfDepartmentUnderBranchHead(DepartmentID, userID)
 		if err != nil {
-			log.Printf("Error checking user details: %v", err)
+			log.Printf("Error checking user details:: %v", err)
 			return http.StatusUnauthorized, []models.DepartmentIssuesModel{}, -1, Sort.Page, Sort.Limit, fmt.Errorf("database error")
 		} else if !ok {
 			log.Printf("Invalid user details")

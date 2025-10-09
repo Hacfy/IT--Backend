@@ -63,6 +63,7 @@ func (q *Query) GetUserPasswordID(userEmail, userType string) (string, string, i
 
 func (q *Query) VerifyUser(userEmail, userType string, userID int) (bool, error) {
 	var exists int
+	log.Println(userType, userEmail, userID)
 	query := fmt.Sprintf("SELECT 1 FROM %s WHERE email = $1 AND id = $2", userType)
 	if err := q.db.QueryRow(query, userEmail, userID).Scan(&exists); err != nil {
 		if err == sql.ErrNoRows {

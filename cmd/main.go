@@ -11,7 +11,7 @@ func main() {
 	addr := flag.String("addr", ":8080", "Address at which the server will run")
 	flag.Parse()
 
-	err := godotenv.Load("/home/ashith/Hacfy/IT_INVENTORY/.env.local")
+	err := godotenv.Load("/home/hp/Desktop/IT--Backend/.env.local")
 	if err != nil {
 		log.Fatalf("error while loading env %s", err)
 	}
