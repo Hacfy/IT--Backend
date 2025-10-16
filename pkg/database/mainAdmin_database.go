@@ -128,7 +128,7 @@ func (q *Query) DeleteMainAdmin(mainAdminEmail string, main_admin_id, deleted_by
 }
 
 func (q *Query) Deleteorganization(organizationEmail string, organization_id, deleted_by int) (int, error) {
-	query1 := "SELECT EXISTS(SELECT 1 FROM super_admins WHERE org_id = $1)"
+	query1 := "SELECT EXISTS(SELECT 1 FROM super_admin WHERE org_id = $1)"
 	query2 := "INSERT INTO deleted_organization(org_id, email, main_admin_id) VALUES($1, $2, $3)"
 	query3 := "DELETE FROM organization WHERE email = $1"
 	query4 := "DELETE FROM users WHERE user_email = $1 RETRUNING user_email, user_level, ever_logged_in, latest_token, created_at"

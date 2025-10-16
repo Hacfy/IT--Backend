@@ -412,7 +412,7 @@ func (q *Query) CheckBranchHead(user_id, branch_id int) (bool, error) {
 }
 
 func (q *Query) CheckIfBranchUnderSuperAdmin(branch_id, user_id int) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM branches WHERE branch_id = $1 AND super_admin_id = (SELECT id FROM super_admins WHERE id = $2))"
+	query := "SELECT EXISTS(SELECT 1 FROM branches WHERE branch_id = $1 AND super_admin_id = (SELECT id FROM super_admin WHERE id = $2))"
 	var exists bool
 	err := q.db.QueryRow(query, branch_id, user_id).Scan(&exists)
 	if err != nil {
@@ -442,7 +442,7 @@ func (q *Query) CheckDepartmentHead(user_id, department_id int) (bool, error) {
 }
 
 func (q *Query) CheckIfDepartmentUnderSuperAdmin(department_id, user_id int) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id IN (SELECT branch_id FROM branches WHERE super_admin_id = (SELECT id FROM super_admins WHERE id = $2)))"
+	query := "SELECT EXISTS(SELECT 1 FROM departments WHERE department_id = $1 AND branch_id IN (SELECT branch_id FROM branches WHERE super_admin_id = (SELECT id FROM super_admin WHERE id = $2)))"
 	var exists bool
 	err := q.db.QueryRow(query, department_id, user_id).Scan(&exists)
 	if err != nil {
@@ -684,7 +684,7 @@ func (q *Query) CheckIfUnitIDExists(unit_id, component_id, user_id int) (string,
 }
 
 func (q *Query) CheckIfSuperAdminExists(super_admin_id, user_id int) error {
-	query := "SELECT EXISTS(SELECT 1 FROM super_admins WHERE id = $1 AND org_id = $2)"
+	query := "SELECT EXISTS(SELECT 1 FROM super_admin WHERE id = $1 AND org_id = $2)"
 	var exists bool
 	err := q.db.QueryRow(query, super_admin_id, user_id).Scan(&exists)
 	if err != nil {
