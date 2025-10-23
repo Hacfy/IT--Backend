@@ -13,14 +13,21 @@ import (
 
 func (q *Query) IfPrefixExists(prefix string) bool {
 	var exists bool
-	q.db.QueryRow("SELECT EXISTS(SELECT 1 FROM warehouses WHERE prefix = $1)", prefix).Scan(&exists)
+	q.db.QueryRow("SELECT EXISTS(SELECT 1 FROM components WHERE prefix = $1)", prefix).Scan(&exists)
 	return exists
 }
-
-func (q *Query) IfComponentExists(name string, warehouse_id int) bool {
+func (q *Query) IfComponentExists(name string, warehouseID int) (bool, error) {
 	var exists bool
-	q.db.QueryRow("SELECT EXISTS(SELECT 1 FROM components WHERE name = $1 AND warehouse_id = $2)", name, warehouse_id).Scan(&exists)
-	return exists
+	err := q.db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM components WHERE name = $1 AND warehouse_id = $2
+		)
+	`, name, warehouseID).Scan(&exists)
+
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 func (q *Query) CheckIfComponentIDExists(component_id, warehouse_id int) (string, bool, error) {
@@ -33,8 +40,7 @@ func (q *Query) CheckIfComponentIDExists(component_id, warehouse_id int) (string
 	return prefix, true, nil
 }
 
-func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, error) {
-	var id int
+func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (id int, err error) {
 	query1 := "INSERT INTO components(name, prefix, warehouse_id) VALUES($1, $2, $3) RETURNING id"
 	query2 := fmt.Sprintf(`
 	CREATE TABLE IF NOT EXISTS %s_units (
@@ -49,25 +55,34 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 		CONSTRAINT fk_%s_units_component_id FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE,
 		CONSTRAINT fk_%s_units_warehouse_id FOREIGN KEY (warehouse_id) REFERENCES warehouses(id) ON DELETE CASCADE
 	)`, prefix, prefix, prefix)
-	query3 := fmt.Sprintf(`
-	CREATE TABLE IF NOT EXISTS %s_units_assigned (
-		id INTEGER PRIMARY KEY,
-		department_id INTEGER NOT NULL,
-		workspace_id INTEGER NOT NULL,
-		assigned_at TIMESTAMPTZ DEFAULT NOW(),
-		CONSTRAINT fk_%s_units_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
-		CONSTRAINT fk_%s_units_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
-		CONSTRAINT fk_%s_units_id FOREIGN KEY (id) REFERENCES %s_units(id) ON DELETE CASCADE
-	)`, prefix, prefix, prefix, prefix, prefix)
+	// query3 := fmt.Sprintf(`
+	// CREATE TABLE IF NOT EXISTS %s_units_assigned (
+	// 	id INTEGER PRIMARY KEY,
+	// 	department_id INTEGER NOT NULL,
+	// 	workspace_id INTEGER NOT NULL,
+	// 	assigned_at TIMESTAMPTZ DEFAULT NOW(),
+	// 	CONSTRAINT fk_%s_units_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+	// 	CONSTRAINT fk_%s_units_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+	// 	CONSTRAINT fk_%s_units_id FOREIGN KEY (id) REFERENCES %s_units(id) ON DELETE CASCADE
+	// )`, prefix, prefix, prefix, prefix, prefix)
 
-	query4 := fmt.Sprintf(`
-	CREATE TABLE IF NOT EXISTS %s_deleted_units (
-		id SERIAL PRIMARY KEY,
-		unit_id INTEGER NOT NULL,
-		warehouse_id INTEGER NOT NULL,
-		deleted_at TIMESTAMPTZ DEFAULT NOW(),
-		deleted_by INTEGER NOT NULL
-	)`, prefix)
+	// query4 := fmt.Sprintf(`
+	// CREATE TABLE IF NOT EXISTS %s_deleted_units (
+	// 	id SERIAL PRIMARY KEY,
+	// 	unit_id INTEGER NOT NULL,
+	// 	warehouse_id INTEGER NOT NULL,
+	// 	deleted_at TIMESTAMPTZ DEFAULT NOW(),
+	// 	deleted_by INTEGER NOT NULL
+	// )`, prefix)
+	if q.db == nil {
+		log.Println("the db is nil")
+	}
+
+	log.Println("the db is not nil")
+
+	log.Println(query1)
+	log.Println(query2)
+
 	tx, err := q.db.Begin()
 	if err != nil {
 		log.Printf("error while initialising DB: %v", err)
@@ -84,22 +99,120 @@ func (q *Query) CreateComponent(name, prefix string, warehouse_id int) (int, err
 	}()
 
 	if err = tx.QueryRow(query1, name, prefix, warehouse_id).Scan(&id); err != nil {
+		log.Println("query1")
 		return -1, err
 	}
 
 	if _, err = tx.Exec(query2); err != nil {
+		log.Println("query2")
 		return -1, err
 	}
 
+	// if _, err = tx.Exec(query3); err != nil {
+	// 	log.Println("query3")
+	// 	return -1, err
+	// }
+	// log.Println("error 3:" + err.Error())
+
+	// if _, err = tx.Exec(query4); err != nil {
+	// 	log.Println("query4")
+	// 	return -1, err
+	// }
+	// log.Println("error 4:" + err.Error())
+
+	return id, nil
+}
+
+func (q *Query) CreateAssignedAndDeleteUnitTable(prefix string) error {
+	// query3 := fmt.Sprintf(`
+	// CREATE TABLE IF NOT EXISTS %s_units_assigned (
+	// 	unit_id INTEGER PRIMARY KEY,
+	// 	department_id INTEGER NOT NULL,
+	// 	workspace_id INTEGER NOT NULL,
+	// 	assigned_at TIMESTAMPTZ DEFAULT NOW(),
+	// 	CONSTRAINT fk_%s_units_department_id FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+	// 	CONSTRAINT fk_%s_units_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+	// )`, prefix, prefix, prefix)
+	// CONSTRAINT fk_%s_units_id FOREIGN KEY (unit_id) REFERENCES %s_units(id) ON DELETE CASCADE
+
+	query3 := fmt.Sprintf(`
+	CREATE TABLE IF NOT EXISTS %s_units_assigned (
+		unit_id INTEGER PRIMARY KEY,
+		department_id INTEGER NOT NULL,
+		workspace_id INTEGER NOT NULL,
+		assigned_at TIMESTAMPTZ DEFAULT NOW(),
+		CONSTRAINT fk_%s_units_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE,
+		CONSTRAINT fk_%s_units_workspace_id FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+		CONSTRAINT fk_%s_units_assigned_unit_id FOREIGN KEY (unit_id) REFERENCES %s_units(id) ON DELETE CASCADE
+	)`, prefix, prefix, prefix, prefix, prefix)
+
+	query4 := fmt.Sprintf(`
+	CREATE TABLE IF NOT EXISTS %s_deleted_units (
+		id SERIAL PRIMARY KEY,
+		unit_id INTEGER NOT NULL,
+		warehouse_id INTEGER NOT NULL,
+		deleted_at TIMESTAMPTZ DEFAULT NOW(),
+		deleted_by INTEGER NOT NULL
+	)`, prefix)
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Printf("error while initialising DB: %v", err)
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	log.Println(query3)
+	log.Println(query4)
+
 	if _, err = tx.Exec(query3); err != nil {
-		return -1, err
+		log.Println("query3")
+		return err
 	}
 
 	if _, err = tx.Exec(query4); err != nil {
-		return -1, err
+		log.Println("query4")
+		return err
 	}
 
-	return id, nil
+	return nil
+}
+
+func (q *Query) UndoCreateComponent(prefix string) {
+	query1 := "DELETE FROM components WHERE prefix = $1"
+
+	query2 := fmt.Sprintf("DROP TABLE %s_units", prefix)
+
+	tx, err := q.db.Begin()
+	if err != nil {
+		log.Println("error while initialising DB" + err.Error())
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+			log.Println("Initialised Database")
+		}
+	}()
+
+	if _, err = tx.Exec(query1, prefix); err != nil {
+		log.Println("query1: " + err.Error())
+	}
+
+	if _, err = tx.Exec(query2); err != nil {
+		log.Println("query2 " + err.Error())
+	}
+
 }
 
 func (q *Query) DeleteComponent(del_component models.DeleteComponentModel, warehouse_id int) (int, error) {
@@ -160,7 +273,7 @@ func (q *Query) CreateComponentUnit(warranty_date time.Time, cost float32, prifi
 
 func (q *Query) AssignUnitWorkspace(workspace_id int, unit_id []int, prefix string) (int, error) {
 	query1 := "SELECT department_id FROM workspaces WHERE id = $1"
-	query2 := fmt.Sprintf("INSERT INTO %s_units_assigned(department_id, workspace_id, id) VALUES($1, $2, $3)", prefix)
+	query2 := fmt.Sprintf("INSERT INTO %s_units_assigned(department_id, workspace_id, unit_id) VALUES($1, $2, $3)", prefix)
 
 	tx, err := q.db.Begin()
 	if err != nil {
@@ -512,7 +625,7 @@ func (q *Query) UpdateComponentName(component_id int, component_name string) (in
 }
 
 func (q *Query) GetAssignedUnits(prefix string, workspace_id, limit, offset int) ([]models.AssignedUnitsModel, int, error) {
-	query := fmt.Sprintf("SELECT id, warehouse_id, department_id FROM %s_units_assigned WHERE workspace_id = $1 LIMIT $2 OFFSET $3", prefix)
+	query := fmt.Sprintf("SELECT unit_id, warehouse_id, department_id FROM %s_units_assigned WHERE workspace_id = $1 LIMIT $2 OFFSET $3", prefix)
 
 	query1 := "SELECT COUNT(*) FROM %s_units_assigned WHERE workspace_id = $1"
 	var units []models.AssignedUnitsModel

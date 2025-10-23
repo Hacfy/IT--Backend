@@ -53,14 +53,13 @@ func (q *Query) CreateDepartment(department models.CreateDepartmentModel, branch
 func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHeadID int, password string) (int, error) {
 	query0 := `
     SELECT branch_id 
-    FROM branch_heads 
+    FROM branch_head 
     WHERE id = $1
 `
 
 	query1 := `
     INSERT INTO users(user_email, user_level) 
-    VALUES($1, $2) 
-    RETURNING user_email
+    VALUES($1, $2)
 `
 
 	query2 := `
@@ -70,8 +69,8 @@ func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHea
 `
 
 	var (
-		branch_id    int
-		user_id      int
+		branch_id int
+		// user_id      int
 		warehouse_id int
 	)
 
@@ -91,21 +90,24 @@ func (q *Query) CreateWarehouse(warehouse models.CreateWarehouseModel, branchHea
 	}()
 
 	if err = tx.QueryRow(query0, branchHeadID).Scan(&branch_id); err != nil {
+		log.Println("query0")
 		if err == sql.ErrNoRows {
 			return http.StatusNotFound, err
 		}
 		return http.StatusInternalServerError, err
 	}
 
-	if err = tx.QueryRow(query1, warehouse.WarehouseUserEmail, "warehouses").Scan(&user_id); err != nil {
+	if _, err = tx.Exec(query1, warehouse.WarehouseUserEmail, "warehouses"); err != nil {
+		log.Println("query1")
 		return http.StatusInternalServerError, err
 	}
 
 	if err = tx.QueryRow(query2, warehouse.WarehouseUserName, warehouse.WarehouseUserEmail, branch_id, password).Scan(&warehouse_id); err != nil {
+		log.Println("query2")
 		return http.StatusInternalServerError, err
 	}
 
-	log.Printf("New warehouse created: warehouse_id=%d, user_id=%d, branch_id=%d", warehouse_id, user_id, branch_id)
+	log.Printf("New warehouse created: warehouse_id=%d, user_email=%s, branch_id=%d", warehouse_id, warehouse.WarehouseUserEmail, branch_id)
 
 	return http.StatusCreated, nil
 

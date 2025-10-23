@@ -43,7 +43,7 @@ func InitialiseHttpRouter(db *sql.DB) *echo.Echo {
 
 	organisatoinHandler := handlers.NeworganizationHandler(repository.NewOrgRepo(db))
 
-	// e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admin", "organization", "branch_heads", "department_heads", "warehouses"))
+	// e.Use(middleware.AuthMiddleware, middleware.RoleMiddleware("super_admin", "organization", "branch_head", "department_heads", "warehouses"))
 
 	e.POST("/organization/create/superAdmin", organisatoinHandler.CreateSuperAdminHandler)              //
 	e.DELETE("/organization/delete/superAdmin", organisatoinHandler.DeleteSuperAdminHandler)            //
